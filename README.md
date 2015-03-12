@@ -49,8 +49,8 @@ We are going to use a two-step process of a copier client and a watcher daemon. 
 ### Watcher location
 
     /.../dittohead (dittohead:dittohead mode 1777)
-      /foo (user:user-grp mode 700)
-        /eprime-{unique identifier}
+      /.foo-{id} (user:user-grp mode 700)
+        /eprime
 
 ### Final location
 
