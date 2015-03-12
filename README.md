@@ -4,6 +4,19 @@ A secure one-way file synchronizer that never forgets anything.
 
 ------------
 
+Other name options:
+
+* deaddrop
+* samepage
+* slugbug
+* carefulcopy
+* eideticopy
+* plop
+* durpbox
+* ok I admit I'm tired and silly please help come up with better names
+
+------------
+
 We need a tool that is platform agnostic and secure for sending data to a locked-down final location that the user themselves may not have final read or write access to.
 
 It needs to be a one-way file sync that does not destroy data.
@@ -35,18 +48,18 @@ We are going to use a two-step process of a copier client and a watcher daemon. 
 
 ### Watcher location
 
-    /watcher (watcher:watcher mode 1777)
+    /.../dittohead (dittohead:dittohead mode 1777)
       /foo (user:user-grp mode 700)
         /eprime-{unique identifier}
 
 ### Final location
 
-Everything is the same in raw-data, so it can be extra locked down. We create a new directory inside /study/foo, like so:
+Everything is the same as it was for raw-data, so it can be extra locked down. We create a new directory inside /study/foo, like so:
 
     /study
       /foo (foo:foo-grp 775 +s)
         /raw-data (mri:foo-raw-data 750 +s)
-        /TODO (TODO:foo-TODO 750 +s)
+        /dittohead (dittohead:foo-dittohead 750 +s)
           /eprime
           /biopac
           /eyetracker
@@ -54,7 +67,7 @@ Everything is the same in raw-data, so it can be extra locked down. We create a 
 
 ## Documentation
 
-We need documentation for data collectors to be able to run the tool, and we need documentation for the study runners so they know how it works.
+We need documentation for data collectors so they know how to run the tool (hopefully it's *way easy*), and we need documentation for the study runners so they know *how it works.*
 
 ## Notification
 
