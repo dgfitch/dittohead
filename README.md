@@ -25,6 +25,8 @@ If data is re-copied multiple times with the same path and name, all versions ne
 
 We are going to use a two-step process of a copier client and a watcher daemon. It needs to be agnostic about the file structure on both sides.
 
+We are not planning to support simultaneous uploads from two machines to the same directory.
+
 
 ## Copier client
 
@@ -33,8 +35,43 @@ We are going to use a two-step process of a copier client and a watcher daemon. 
 1. You select your study (top-level folder).
 2. You select what thing inside there to send, if any. (eprime, eyetracker, biopac... many studies may have a default or we may script this to just do all things inside that study)
 3. You enter your credentials because the local PC may be running as some local account for data gathering.
-4. The copier plops it in the watched location with a period at the start so it's ignored, and when done, renames without the period.
+4. The copier plops new stuff in the watched location with a period at the start so it's ignored, and when done, renames without the period.
 5. The folder name of what is copied also contains a unique identifier of the location, somehow. (Brogden A, etc.)
+
+### Ways to find what to copy
+
+- Leave inbox around, rsync into it
+- maybe use rsync --dry-run somehow
+- Keep a textfile with last update timestamp
+- Create staging home (temp directory) and pscp -r
+- Two steps: Create all directories newer than X, copy files newer than X (requires update timestamp)
+- scp -r with directories if newer than X, else individual files newer than X (requires update timestamp)
+
+
+### Windows auth options:
+
+- Open a tunnel at first, prompt user via normal ssh prompt for login and password, somehow send stuff through tunnel. Whee!
+
+- Run putty processes passing user and password as args. May show up in process list and would definitely be visible in memory - do we care?
+
+### Failed Windows options:
+
+- Run a process on the domain even though the machine is not on the domain: 
+  - runas /netonly /user:domain\username "PROCESS"
+  - Sadly does not work
+
+### Kinda bad Windows options:
+
+- wxPython thing sets up keys for each user somehow and walks them through it? 
+
+### Mac options:
+
+- Somehow get Kerberos auth to work
+- ...
+
+------
+
+Can we do whatever solution we choose from outside the building?
 
 ## Watcher daemon
 
@@ -49,7 +86,7 @@ We are going to use a two-step process of a copier client and a watcher daemon. 
 ### Watcher location
 
     /.../dittohead (dittohead:dittohead)
-      /inbox (mode 1777)
+      /inbox (mode 3777)
         /.foo-{id} (copied in by user, so ends up user:user-grp mode 700)
           /eprime
           /biopac
@@ -86,3 +123,7 @@ We may want to make the watcher notify someone about failed or even successful j
 We may also want to include "Hey, your study is out of space!" or "Your study is 90% full" notifications with that.
 
 
+# TODO
+
+- At least in a command-line program, using `subprocess.check_call` with putty programs causes the thing to hang on error if you try to take input like `input("Hit enter to exit")` -- that's kind of weird and scary, make sure that failures don't make the process hang
+- OSX client?
