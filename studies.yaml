@@ -1,11 +1,7 @@
--
-    name: COGEMO
-    study_directory: /study/cogemo
--
-    name: MIDUSREF
-    study_directory: /study/midusref
-    # This is just for testing!
-    extra_contacts: dfitch@wisc.edu
--
-    name: NCCAM3
-    study_directory: /study/nccam3
+- local_directory: C:\My Experiments\stuff
+  name: COGEMO
+- extra_contacts: dfitch@wisc.edu
+  local_directory: C:\My Experiments\stuff
+  name: MIDUSREF
+- local_directory: C:\My Experiments\stuff
+  name: NCCAM3

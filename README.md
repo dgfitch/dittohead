@@ -119,5 +119,6 @@ We may also want to include "Hey, your study is out of space!" or "Your study is
 
 # TODO
 
-- At least in a command-line program, using `subprocess.check_call` with putty programs causes the thing to hang on error if you try to take input like `input("Hit enter to exit")` -- that's kind of weird and scary, make sure that failures don't make the process hang
-- OSX client?
+
+- UI
+- Editor for studies

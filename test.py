@@ -38,7 +38,7 @@ def load_yaml(filename):
 
 def save_yaml(x, filename):
     with open(filename, 'w') as outfile:
-        outfile.write( yaml.dump(x, default_flow_style=True) )
+        outfile.write( yaml.dump(x, default_flow_style=False) )
 
 
 log = configure_logging()
@@ -46,6 +46,7 @@ log = configure_logging()
 
 studies = load_yaml("studies.yaml")
 if len(studies) < 1:
+    # TODO: Actually, this should probably just start them in the study editor
     log.error("No studies found in YAML settings file.")
     exit
 
@@ -53,10 +54,11 @@ last_users = load_yaml("last_users.yaml")
 last_times = load_yaml("last_times.yaml")
 
 app = wx.App(False)
-frame = DFrame(None, 'dittohead', studies, last_users, last_times)
+frame = CopyFrame(None, 'dittohead', studies, last_users, last_times)
 app.MainLoop()
 
-save_yaml(last_users, "last_users.yaml")
-save_yaml(last_times, "last_times.yaml")
+#save_yaml(last_users, "last_users.yaml")
+#save_yaml(last_times, "last_times.yaml")
+#save_yaml(studies, "studies.yaml")
 
 
