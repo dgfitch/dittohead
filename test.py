@@ -1,34 +1,62 @@
 import os
-import subprocess
-from sys import stdin
+import logging
+import yaml
 
-PSCP = r"c:\Program Files (x86)\PuTTY\pscp.exe"
-PLINK = r"c:\Program Files (x86)\PuTTY\plink.exe"
-localfile = r"c:\DanTemp\git\pySketch"
-remotehost = "guero"
-remotefile = "dittohead_copy"
+import wx
+from test_interface import *
 
-#os.system('"%s" "%s" "%s:%s"' % (PSCP, localfile, remotehost, remotefile) )
 
-try:
-    # Making a directory
-    subprocess.check_call([PLINK, remotehost, "-batch", "mkdir .%s" % remotefile])
+def configure_logging():
+    # From the logging cookbook: https://docs.python.org/2/howto/logging-cookbook.html#logging-cookbook
+    log = logging.getLogger('dittohead')
+    log.setLevel(logging.DEBUG)
+    # create file handler which logs debug messages
+    fh = logging.FileHandler('dittohead.log')
+    fh.setLevel(logging.DEBUG)
+    # create console handler with a less-verbose log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    # add the handlers to the logger
+    log.addHandler(fh)
+    log.addHandler(ch)
 
-    # Copying a local directory recursively
-    subprocess.check_call([PSCP, "-r", "-C", localfile, "%s:.%s" % (remotehost, remotefile)])
+    return log
 
-    # Move the directory to its final location
-    subprocess.check_call([PLINK, remotehost, "-batch", "mv .{0} {0}".format(remotefile)])
 
-except Exception as e:
-    # If this was a UI program, show some kind of helpful error here.
-    # TODO: We should also log it to a local log of some kind
-    print "Got an exception", e
+def load_yaml(filename):
+    if os.path.isfile(filename):
+        stream = open(filename, 'r')
+        x = yaml.load(stream)
+        stream.close()
+        return x
+    else:
+        return {}
 
-    """
-    Now here's a weird thing: input hangs here on a failure,
-    possibly because the subprocess calls above cause some kind
-    of input redirection
-    """
-    #input("Hit ENTER to exit")
+def save_yaml(x, filename):
+    with open(filename, 'w') as outfile:
+        outfile.write( yaml.dump(x, default_flow_style=True) )
+
+
+log = configure_logging()
+
+
+studies = load_yaml("studies.yaml")
+if len(studies) < 1:
+    log.error("No studies found in YAML settings file.")
+    exit
+
+last_users = load_yaml("last_users.yaml")
+last_times = load_yaml("last_times.yaml")
+
+app = wx.App(False)
+frame = DFrame(None, 'dittohead', studies, last_users, last_times)
+app.MainLoop()
+
+save_yaml(last_users, "last_users.yaml")
+save_yaml(last_times, "last_times.yaml")
+
 

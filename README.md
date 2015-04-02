@@ -47,31 +47,7 @@ We are not planning to support simultaneous uploads from two machines to the sam
 - Two steps: Create all directories newer than X, copy files newer than X (requires update timestamp)
 - scp -r with directories if newer than X, else individual files newer than X (requires update timestamp)
 
-
-### Windows auth options:
-
-- Open a tunnel at first, prompt user via normal ssh prompt for login and password, somehow send stuff through tunnel. Whee!
-
-- Run putty processes passing user and password as args. May show up in process list and would definitely be visible in memory - do we care?
-
-### Failed Windows options:
-
-- Run a process on the domain even though the machine is not on the domain: 
-  - runas /netonly /user:domain\username "PROCESS"
-  - Sadly does not work
-
-### Kinda bad Windows options:
-
-- wxPython thing sets up keys for each user somehow and walks them through it? 
-
-### Mac options:
-
-- Somehow get Kerberos auth to work
-- ...
-
 ------
-
-Can we do whatever solution we choose from outside the building?
 
 ## Watcher daemon
 

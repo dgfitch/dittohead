@@ -52,3 +52,10 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Dittohead's own logs
+dittohead.log
+
+# Fungible yaml junk that dittohead stores on client machines
+last_users.yaml
+last_times.yaml
