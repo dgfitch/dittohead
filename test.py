@@ -46,9 +46,7 @@ log = configure_logging()
 
 studies = load_yaml("studies.yaml")
 if len(studies) < 1:
-    # TODO: Actually, this should probably just start them in the study editor
-    log.error("No studies found in YAML settings file.")
-    exit
+    log.warn("No studies found in YAML settings file.")
 
 last_users = load_yaml("last_users.yaml")
 last_times = load_yaml("last_times.yaml")
@@ -60,8 +58,8 @@ app.SetTopWindow(copy_frame)
 copy_frame.Show()
 app.MainLoop()
 
-#save_yaml(last_users, "last_users.yaml")
-#save_yaml(last_times, "last_times.yaml")
-#save_yaml(studies, "studies.yaml")
+save_yaml(last_users, "last_users.yaml")
+save_yaml(last_times, "last_times.yaml")
+save_yaml(studies, "studies.yaml")
 
 

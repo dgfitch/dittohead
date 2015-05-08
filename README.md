@@ -121,4 +121,8 @@ We may also want to include "Hey, your study is out of space!" or "Your study is
 
 
 - UI
-- Editor for studies
+  - Display of "what is about to happen"
+  - Better exception handling, show to user and die instead of just logging
+  - Clever icon
+- Actually decide what the backend should do
+
