@@ -1,17 +1,38 @@
 import wx
 import gettext
+import os.path
+import datetime
 
 from copy import copy_files
 
+# Hack so icon works right on windows, see http://stackoverflow.com/questions/15223952/wxpython-icon-for-task-bar
+"""
+import ctypes
+myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+"""
+
 FONT_SIZE = (8,20)
 
-class StudyFrame(wx.Frame):
+class DittoheadFrame(wx.Frame):
+    """
+    Some shared font and icon settings for windows in this app.
+    """
     def __init__(self, *args, **kwds):
         wx.Frame.__init__(self, *args, **kwds)
 
         font = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
         font.SetPixelSize(FONT_SIZE)
         self.SetFont(font)
+
+        if os.path.isfile('dittohead.ico'):
+            icon = wx.Icon('dittohead.ico', wx.BITMAP_TYPE_ICO)
+            self.SetIcon(icon)
+
+
+class StudyFrame(DittoheadFrame):
+    def __init__(self, *args, **kwds):
+        DittoheadFrame.__init__(self, *args, **kwds)
 
         LABEL_WIDTH = 300
         TEXTBOX_WIDTH = 300
@@ -108,14 +129,9 @@ class StudyFrame(wx.Frame):
         self.Destroy()
 
 
-class CopyFrame(wx.Frame):
+class CopyFrame(DittoheadFrame):
     def __init__(self, *args, **kwds):
-        # begin wxGlade: CopyFrame.__init__
-        wx.Frame.__init__(self, *args, **kwds)
-
-        font = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
-        font.SetPixelSize(FONT_SIZE)
-        self.SetFont(font)
+        DittoheadFrame.__init__(self, *args, **kwds)
 
         self.panel = wx.Panel(self, wx.ID_ANY)
         self.label_studies = wx.StaticText(self.panel, wx.ID_ANY, "Choose a study:")
@@ -141,6 +157,8 @@ class CopyFrame(wx.Frame):
         self.SetTitle("dittohead")
         self.edit_study_button.Enable(False)
         self.copy_button.Enable(False)
+
+
         # end wxGlade
 
     def __bind_events(self):
@@ -195,10 +213,9 @@ class CopyFrame(wx.Frame):
         # end wxGlade
 
 
-    def LoadStudies(self, log, studies, last_users, last_times):
+    def LoadStudies(self, log, studies, last_users):
         self.studies = studies
         self.last_users = last_users
-        self.last_times = last_times
 
         for s in studies:
             self.list_studies.Append(s["name"])
@@ -215,9 +232,8 @@ class CopyFrame(wx.Frame):
 
         for s in self.studies:
             if s["name"] == self.selected_study:
-                if self.selected_study in self.last_times:
-                    self.last_time = self.last_times[self.selected_study]
-                    self.label_preview.SetValue("Preview: ({0} last ran at {1})".format(self.selected_study, self.last_time))
+                if "last_time" in s:
+                    self.label_preview.SetValue("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"]))
 
                 users = self.combo_username
                 users.Clear()
@@ -227,6 +243,8 @@ class CopyFrame(wx.Frame):
                         users.Append(u)
                         if self.text_password.GetValue() == "":
                             users.SetSelection(0)
+
+                self.UpdatePreview()
 
 
     def AddStudyClick(self, event):
@@ -239,19 +257,71 @@ class CopyFrame(wx.Frame):
         study_frame.EditStudy(self.studies, self.list_studies.GetStringSelection())
         study_frame.Show()
 
-    def StudiesChanged(self):
-        True
+
+    def UpdatePreview(self):
+        files = self.FilesToCopy()
+        if len(files) == 0:
+            p = "No new data files found."
+        else:
+            p = files.join("\n")
+
+        self.text_preview.SetValue(p)
+
+    def FilesToCopy(self):
+        if not self.selected_study: return []
+        for s in self.studies:
+            if s["name"] == self.selected_study:
+                if "last_time" in s:
+                    last_time = s["last_time"]
+                else:
+                    last_time = datetime.date(1900,1,1)
+
+                stuff = s["local_directory"]
+                # TODO: Iterate over local directory looking for things > last_time
+
+                break
+        else:
+            return []
+
+
 
     def CopyClick(self, event):
-        """
+        study_name = self.list_studies.GetStringSelection()
+        username = self.combo_username.GetValue()
+        password = self.text_password.GetValue()
+
+        if not self.selected_study: raise Exception("You didn't select a study.")
+        if not self.username: raise Exception("You didn't enter a user name.")
+        if not self.password: raise Exception("You didn't enter your password.")
+
+        for s in self.studies:
+            if s["name"] == self.study_name:
+                study = s
+                break
+        else:
+            study = None
+
+        if study == None: raise Exception("Could not find information about study {0}".format(study_name))
+        if not study["local_directory"]: raise Exception("No data about where to find local data for study {0}".format(study_name))
+
+        x = study["local_directory"]
+
+        # TODO: also copy a little .dittohead info file with our extra_contacts
+
         copy_files(
-            user=user, password=password, 
-            localfile=r"c:\DanTemp\git\pySketch",
-            remotefile="dittohead_copy"
+            user=username, password=password, 
+            localfile=x,
+            remotefile="/study/{0}/TODO".format(study_name)
         )
-        """
 
         # Reorder self.last_users or add a new entry if needed
-        # self.last_users["TEST"] = "yay"
+        if study_name not in self.last_users:
+            self.last_users[study_name] = []
+
+        last = self.last_users[study_name]
+        if username in last:
+            last.remove(username)
+        last.insert(0, username)
+
         self.Destroy()
 

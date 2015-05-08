@@ -2,6 +2,7 @@
 
 A secure one-way file synchronizer that never forgets anything.
 
+
 ------------
 
 Other name options:
@@ -117,12 +118,18 @@ We may want to make the watcher notify someone about failed or even successful j
 We may also want to include "Hey, your study is out of space!" or "Your study is 90% full" notifications with that.
 
 
+## Acknowledgements
+
+- Icon from http://ic8.link/901
+
+
 # TODO
 
-
 - UI
+  - Implement FilesToCopy
   - Display of "what is about to happen"
-  - Better exception handling, show to user and die instead of just logging
-  - Clever icon
+  - Better exception handling, show error to user and die instead of just logging
 - Actually decide what the backend should do
+
+
 

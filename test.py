@@ -49,17 +49,15 @@ if len(studies) < 1:
     log.warn("No studies found in YAML settings file.")
 
 last_users = load_yaml("last_users.yaml")
-last_times = load_yaml("last_times.yaml")
 
 app = wx.App(False)
 copy_frame = CopyFrame(None, wx.ID_ANY, "", size=wx.Size(800,600))
-copy_frame.LoadStudies(log, studies, last_users, last_times)
+copy_frame.LoadStudies(log, studies, last_users)
 app.SetTopWindow(copy_frame)
 copy_frame.Show()
 app.MainLoop()
 
 save_yaml(last_users, "last_users.yaml")
-save_yaml(last_times, "last_times.yaml")
 save_yaml(studies, "studies.yaml")
 
 
