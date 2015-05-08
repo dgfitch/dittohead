@@ -22,13 +22,18 @@ class CopyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: CopyFrame.__init__
         wx.Frame.__init__(self, *args, **kwds)
+
+        newFont = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
+        newFont.SetPixelSize((8,20))
+        self.SetFont(newFont)
+
         self.panel = wx.Panel(self, wx.ID_ANY)
         self.label_studies = wx.StaticText(self.panel, wx.ID_ANY, "Choose a study:")
         self.list_studies = wx.ListBox(self.panel, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
         self.label_username = wx.StaticText(self.panel, wx.ID_ANY, "Username")
         self.label_password = wx.StaticText(self.panel, wx.ID_ANY, "Password")
         self.text_username = wx.TextCtrl(self.panel, wx.ID_ANY, "")
-        self.text_password = wx.TextCtrl(self.panel, wx.ID_ANY, "")
+        self.text_password = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_PASSWORD)
         self.copy_button = wx.Button(self.panel, wx.ID_ANY, "Copy")
         self.cancel_button = wx.Button(self.panel, wx.ID_ANY, "Cancel")
         self.edit_study_button = wx.Button(self.panel, wx.ID_ANY, "Edit Study")
@@ -36,14 +41,27 @@ class CopyFrame(wx.Frame):
         self.label_preview = wx.StaticText(self.panel, wx.ID_ANY, "Stuff that is about to happen:")
         self.text_preview = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_MULTILINE)
 
+
         self.__set_properties()
+        self.__bind_events()
         self.__do_layout()
         # end wxGlade
 
     def __set_properties(self):
         # begin wxGlade: CopyFrame.__set_properties
         self.SetTitle("dittohead")
+        self.edit_study_button.Enable(False)
+        self.copy_button.Enable(False)
         # end wxGlade
+
+    def __bind_events(self):
+        self.Bind(wx.EVT_BUTTON, self.CancelClick, self.cancel_button)
+        self.Bind(wx.EVT_BUTTON, self.CopyClick, self.copy_button)
+
+        self.Bind(wx.EVT_BUTTON, self.EditStudyClick, self.edit_study_button)
+        self.Bind(wx.EVT_BUTTON, self.AddStudyClick, self.add_study_button)
+
+        self.Bind(wx.EVT_LISTBOX, self.StudyClick, self.list_studies)
 
     def __do_layout(self):
         # begin wxGlade: CopyFrame.__do_layout
@@ -87,19 +105,31 @@ class CopyFrame(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def OnSize(self, evt):
-        self.window_1.Fit(self)
-        self.Layout()
 
-
-    def LoadStudies(self, studies, last_users, last_times):
+    def LoadStudies(self, log, studies, last_users, last_times):
         self.studies = studies
         self.last_users = last_users
         self.last_times = last_times
 
+        for s in studies:
+            self.list_studies.Append(s["name"])
+
     
     def CancelClick(self, event):
         self.Destroy()
+
+    def StudyClick(self, event):
+        if self.list_studies.GetStringSelection():
+            self.edit_study_button.Enable(True)
+            self.copy_button.Enable(True)
+
+    def AddStudyClick(self, event):
+        # TODO
+        False
+
+    def EditStudyClick(self, event):
+        # TODO
+        False
 
     def CopyClick(self, event):
         """
