@@ -3,7 +3,7 @@ import logging
 import yaml
 
 import wx
-from test_interface import *
+from dittohead_interface import *
 
 
 def configure_logging():
