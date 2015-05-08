@@ -1,5 +1,5 @@
 import wx
-import wx.lib.scrolledpanel as scrolled
+import gettext
 
 from copy import copy_files
 
@@ -18,73 +18,84 @@ from copy import copy_files
         self.study_panel.SetSizer(self.study_sizer)
 """
 
-
 class CopyFrame(wx.Frame):
-    def __init__(self, parent, title, studies, last_users = {}, last_times = {}):
+    def __init__(self, *args, **kwds):
+        # begin wxGlade: CopyFrame.__init__
+        wx.Frame.__init__(self, *args, **kwds)
+        self.panel = wx.Panel(self, wx.ID_ANY)
+        self.label_studies = wx.StaticText(self.panel, wx.ID_ANY, "Choose a study:")
+        self.list_studies = wx.ListBox(self.panel, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
+        self.label_username = wx.StaticText(self.panel, wx.ID_ANY, "Username")
+        self.label_password = wx.StaticText(self.panel, wx.ID_ANY, "Password")
+        self.text_username = wx.TextCtrl(self.panel, wx.ID_ANY, "")
+        self.text_password = wx.TextCtrl(self.panel, wx.ID_ANY, "")
+        self.copy_button = wx.Button(self.panel, wx.ID_ANY, "Copy")
+        self.cancel_button = wx.Button(self.panel, wx.ID_ANY, "Cancel")
+        self.edit_study_button = wx.Button(self.panel, wx.ID_ANY, "Edit Study")
+        self.add_study_button = wx.Button(self.panel, wx.ID_ANY, "Add Study")
+        self.label_preview = wx.StaticText(self.panel, wx.ID_ANY, "Stuff that is about to happen:")
+        self.text_preview = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_MULTILINE)
+
+        self.__set_properties()
+        self.__do_layout()
+        # end wxGlade
+
+    def __set_properties(self):
+        # begin wxGlade: CopyFrame.__set_properties
+        self.SetTitle("dittohead")
+        # end wxGlade
+
+    def __do_layout(self):
+        # begin wxGlade: CopyFrame.__do_layout
+        action_buttons = wx.BoxSizer(wx.HORIZONTAL)
+        action_buttons.Add(self.copy_button, 0, wx.ALL, 0)
+        action_buttons.Add((-1, -1), 1)
+        action_buttons.Add(self.cancel_button, 0, wx.ALL, 0)
+
+        study_buttons = wx.BoxSizer(wx.HORIZONTAL)
+        study_buttons.Add(self.edit_study_button, 0, wx.ALL, 0)
+        study_buttons.Add((-1, -1), 1)
+        study_buttons.Add(self.add_study_button, 0, wx.ALL, 0)
+
+        left_pane = wx.BoxSizer(wx.VERTICAL)
+        left_pane.Add(self.label_studies, 0, wx.EXPAND, 0)
+        left_pane.Add(self.list_studies, 1, wx.EXPAND | wx.ALL, 0)
+
+        right_pane = wx.BoxSizer(wx.VERTICAL)
+        right_pane.Add(self.label_username, 0, wx.EXPAND)
+        right_pane.Add(self.text_username, 0, wx.EXPAND)
+        right_pane.Add(self.label_password, 0, wx.EXPAND)
+        right_pane.Add(self.text_password, 0, wx.EXPAND)
+        right_pane.Add(self.label_preview, 0, wx.EXPAND)
+        right_pane.Add(self.text_preview, 1, wx.EXPAND | wx.ALL, 0)
+        
+        hgap, vgap = 0, 0
+        nrows, ncols = 2, 2
+        fgs = wx.FlexGridSizer(nrows, ncols, hgap, vgap)
+
+        b = 2
+        fgs.AddMany([(left_pane, 1, wx.EXPAND | wx.ALL, b),
+                     (right_pane, 1, wx.EXPAND | wx.ALL, b),
+                     (study_buttons, 1, wx.EXPAND | wx.ALL, b),
+                     (action_buttons, 1, wx.EXPAND | wx.ALL, b),
+                    ])
+
+        fgs.AddGrowableRow(0)
+        fgs.AddGrowableCol(1)
+        self.panel.SetSizer(fgs)
+
+        self.Layout()
+        # end wxGlade
+
+    def OnSize(self, evt):
+        self.window_1.Fit(self)
+        self.Layout()
+
+
+    def LoadStudies(self, studies, last_users, last_times):
         self.studies = studies
         self.last_users = last_users
         self.last_times = last_times
-
-        wx.Frame.__init__(self, parent, title=title, size=(300,500))
-
-        newFont = wx.SystemSettings_GetFont(wx.SYS_DEFAULT_GUI_FONT)
-        newFont.SetPixelSize((10,24))
-        self.SetFont(newFont)
-
-        # Add a panel so it looks the same on all platforms
-        self.panel = wx.Panel(self, wx.ID_ANY)
-
-        # Buttons
-        self.button_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.buttons = []
-
-        self.cancel = wx.Button(self, -1, "Cancel")
-        self.buttons.append(self.cancel)
-        self.button_sizer.Add(self.cancel, 1, wx.EXPAND)
-        self.Bind(wx.EVT_BUTTON, self.CancelClick, self.cancel)
-
-        self.copy = wx.Button(self, -1, "&Copy")
-        self.copy.Disable()
-        self.buttons.append(self.copy)
-        self.button_sizer.Add(self.copy, 1, wx.EXPAND)
-        self.Bind(wx.EVT_BUTTON, self.CopyClick, self.copy)
-
-
-        # Split
-        self.split = wx.Panel(self, wx.ID_ANY)
-        self.split_sizer = wx.BoxSizer(wx.HORIZONTAL)
-
-        # Studies listing
-        self.studies = wx.ListBox(self.split, wx.ID_ANY, style=wx.LB_SINGLE)
-
-
-        # Upload
-        self.upload = wx.Panel(self, wx.ID_ANY)
-        self.upload_sizer = wx.BoxSizer(wx.VERTICAL)
-
-        # User and password entry
-        self.user = wx.Panel(self.upload, wx.ID_ANY)
-
-        # Preview of what's going to be copied
-        self.preview = wx.Panel(self.upload, wx.ID_ANY)
-
-        self.upload_sizer.Add(self.user, 3, wx.EXPAND)
-        self.upload_sizer.Add(self.preview, 2, wx.EXPAND)
-        self.upload.SetSizer(self.upload_sizer)
-
-
-        self.split_sizer.Add(self.studies, 1, wx.EXPAND)
-        self.split_sizer.Add(self.upload, 2, wx.EXPAND)
-        self.split.SetSizer(self.split_sizer)
-
-
-        # Main sizer
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.split, 1, wx.EXPAND)
-        self.sizer.Add(self.button_sizer, 0, wx.EXPAND)
-        self.panel.SetSizer(self.sizer)
-
-        self.Show()
 
     
     def CancelClick(self, event):

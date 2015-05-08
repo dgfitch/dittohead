@@ -54,7 +54,10 @@ last_users = load_yaml("last_users.yaml")
 last_times = load_yaml("last_times.yaml")
 
 app = wx.App(False)
-frame = CopyFrame(None, 'dittohead', studies, last_users, last_times)
+copy_frame = CopyFrame(None, wx.ID_ANY, "", size=wx.Size(800,600))
+copy_frame.LoadStudies(studies, last_users, last_times)
+app.SetTopWindow(copy_frame)
+copy_frame.Show()
 app.MainLoop()
 
 #save_yaml(last_users, "last_users.yaml")
