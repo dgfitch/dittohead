@@ -6,6 +6,7 @@ import yaml
 import pwd
 import subprocess
 import sys
+from watchdog.observers import Observer
 
 
 def load_yaml(filename):
@@ -39,13 +40,9 @@ def configure_logging():
     return log
 
 
-def main():
-
-    log = configure_logging()
-    config = load_yaml("config.yaml")
-
-    if config['should-demote']:
-        pw_record = pwd.getpwnam(config['subprocess-user-name'])
+def operate(log, config, directory):
+    if config['should_demote']:
+        pw_record = pwd.getpwnam(config['subprocess_user_name'])
         user_name      = pw_record.pw_name
         user_home_dir  = pw_record.pw_dir
         user_uid       = pw_record.pw_uid
@@ -56,9 +53,15 @@ def main():
         env[ 'USER'     ]  = user_name
         report_ids(log, 'starting ' + str(args))
         process = subprocess.Popen(
-            args, preexec_fn=demote(user_uid, user_gid), env=env
+            ["dittohead_worker.py", directory], preexec_fn=demote(user_uid, user_gid), env=env
         )
         report_ids(log, 'finished ' + str(args))
+
+    else: # Run without changing gid and uid
+        process = subprocess.Popen(
+            ["dittohead_worker.py", directory]] 
+        )
+
 
 
 def demote(log, user_uid, user_gid):
@@ -72,6 +75,23 @@ def demote(log, user_uid, user_gid):
 
 def report_ids(log, msg):
     log.info( 'uid, gid = %d, %d; %s' % (os.getuid(), os.getgid(), msg) )
+
+
+
+def main():
+    log = configure_logging()
+    config = load_yaml("config.yaml")
+
+    # https://pypi.python.org/pypi/watchdog
+    observer = Observer()
+    observer.schedule(operate, config["input_directory"])
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
 
 
 if __name__ == '__main__':

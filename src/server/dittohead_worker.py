@@ -27,3 +27,5 @@ def configure_logging():
 
 input_directory = sys.argv[1]
 log.info("Working on directory {0}".format(input_directory))
+
+#### NOW STUFF HAPPENS
