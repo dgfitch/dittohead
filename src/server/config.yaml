@@ -1,0 +1,4 @@
+should-demote: false
+subprocess-user-name: "dittohead-worker"
+input-directory: "/var/tmp/dittohead-input"
+

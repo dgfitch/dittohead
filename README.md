@@ -14,7 +14,7 @@ A secure one-way file synchronizer that never forgets anything.
   - Display of "what is about to happen"
   - Better exception handling, show error to user and die instead of just logging
 - Actually decide what the backend should do
-
+- Pull out shared logging and yaml loading code between server/client, bleh
 
 ------------
 
