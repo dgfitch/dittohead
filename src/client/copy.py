@@ -28,10 +28,10 @@ def mkdir(ftp, path, mode=511, ignore_existing=False):
             raise
 
 
-def copy_files(user, password, localfile, remotehost="guero", remotefile="dittohead_copy"):
+def copy_files(user, password, files, study, remotehost="guero"):
     log = logging.getLogger('dittohead.copy')
 
-    log.info("Starting copy of %s for %s to %s in %s", localfile, user, remotehost, remotefile)
+    log.info("Starting copy of %s files for %s to %s in study directory %s", len(files), user, remotehost, study)
 
     try:
         ssh = paramiko.SSHClient()
@@ -39,8 +39,13 @@ def copy_files(user, password, localfile, remotehost="guero", remotefile="dittoh
         ssh.connect(remotehost, username=user, password=password)
 
         ftp = ssh.open_sftp()
-        ftp.mkdir("." + remotefile)
-        put_dir(ftp, localfile, "." + remotefile)
+        for f in files:
+            remote_path = f['remote_path']
+            local_path  = f['local_path']
+            # TODO: make directory for remote path if necessary
+            ftp.mkdir("." + remotefile)
+            put_file(ftp, local_path, "." + remote_path)
+
         ftp.close()
 
         ssh.exec_command("mv '.{0}' '{0}'".format(remotefile))

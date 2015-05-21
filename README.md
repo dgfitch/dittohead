@@ -12,6 +12,7 @@ A secure one-way file synchronizer that never forgets anything.
   - Nice browse box to select local directory for studies
   - Better exception handling, show error to user in wx interface and die instead of just logging
   - OK and Cancel should support Enter and Escape (or whatever the local OS standard is)
+  - List of files as it uploads (uhh, multithreading? eehhhh)
 - Actually decide what the backend should do
 - Pull out shared logging and yaml loading code between server/client, bleh
 

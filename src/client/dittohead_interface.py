@@ -43,9 +43,11 @@ class StudyFrame(DittoheadFrame):
         l1 = wx.StaticText(self.panel, -1, 'Study Name:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l2 = wx.StaticText(self.panel, -1, 'Extra Contact Emails (use commas):', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l3 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l4 = wx.StaticText(self.panel, -1, 'Remote Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.text_extra_contacts = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.text_local_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
+        self.text_remote_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         b1 = wx.Button(self.panel, wx.NewId(), '&OK', (-1, -1), wx.DefaultSize)
         b2 = wx.Button(self.panel, wx.NewId(), '&Cancel', (-1, -1), wx.DefaultSize)
         staline = wx.StaticLine(self.panel, wx.NewId(), (-1, -1), (-1, 2), wx.LI_HORIZONTAL)
@@ -71,16 +73,22 @@ class StudyFrame(DittoheadFrame):
         hsizer3.SetItemMinSize(l3, (w, -1))
 
         hsizer4 = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer4.Add(b1, 0)
-        hsizer4.Add(b2, 0, wx.LEFT, 10)
+        hsizer4.Add(l4, 0, wx.RIGHT, b)
+        hsizer4.Add(self.text_remote_directory, 1, wx.GROW, b)
+        hsizer4.SetItemMinSize(l4, (w, -1))
 
-        b = 5
+        hsizerLast = wx.BoxSizer(wx.HORIZONTAL)
+        hsizerLast.Add(b1, 0)
+        hsizerLast.Add(b2, 0, wx.LEFT, 10)
+
+        b = 6
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer2, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer3, 0, wx.EXPAND | wx.ALL, b)
+        vsizer1.Add(hsizer4, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(staline, 0, wx.GROW | wx.ALL, b)
-        vsizer1.Add(hsizer4, 0, wx.ALIGN_RIGHT | wx.ALL, b)
+        vsizer1.Add(hsizerLast, 0, wx.ALIGN_RIGHT | wx.ALL, b)
 
         self.panel.SetSizerAndFit(vsizer1)
         self.SetClientSize(vsizer1.GetSize())
@@ -102,6 +110,7 @@ class StudyFrame(DittoheadFrame):
         self.text_name.SetValue(s["name"])
         if "extra_contacts" in s: self.text_extra_contacts.SetValue(s["extra_contacts"])
         if "local_directory" in s: self.text_local_directory.SetValue(s["local_directory"])
+        if "remote_directory" in s: self.text_remote_directory.SetValue(s["remote_directory"])
         
 
     def OkClick(self, event):
@@ -128,6 +137,7 @@ class StudyFrame(DittoheadFrame):
         s["name"] = new_name
         s["extra_contacts"] = self.text_extra_contacts.GetValue()
         s["local_directory"] = self.text_local_directory.GetValue()
+        s["remote_directory"] = self.text_remote_directory.GetValue()
 
         if self.callback: self.callback()
         
@@ -277,6 +287,7 @@ class CopyFrame(DittoheadFrame):
                             users.SetValue(previous_user_value)
 
                 self.UpdatePreview()
+                break
 
         self.EnableEditStudy()
         self.EnableCopy()
@@ -345,7 +356,7 @@ class CopyFrame(DittoheadFrame):
                         mtime = datetime.datetime.fromtimestamp(epoch)
 
                         if mtime > last_time:
-                            result.append(dict(local_path = full_file_path, remote_path = remote_path, size = size, mtime = mtime))
+                            result.append(dict(local_path = full_file_path, remote_path = remote_path, size = size, mtime = mtime, selected = True))
 
                     if '.git' in dirs:
                         dirs.remove('.git')
@@ -353,6 +364,7 @@ class CopyFrame(DittoheadFrame):
 
                 del wait
 
+                self.files = result
                 return result
 
         return []
@@ -383,9 +395,10 @@ class CopyFrame(DittoheadFrame):
         # TODO: also copy a little .dittohead info file with our extra_contacts or whatever other metadata
 
         copy_files(
-            user=username, password=password, 
-            localfile=x,
-            remotefile="/study/{0}/TODO".format(study_name)
+            user=username,
+            password=password, 
+            files=files,
+            study=study_name,
         )
 
         # Reorder self.last_users or add a new entry if needed
