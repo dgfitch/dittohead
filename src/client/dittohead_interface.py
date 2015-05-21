@@ -1,7 +1,7 @@
 import wx
 import gettext
 import os.path
-import datetime
+from datetime import *
 
 from copy import copy_files
 
@@ -51,6 +51,8 @@ class StudyFrame(DittoheadFrame):
         b1 = wx.Button(self.panel, wx.NewId(), '&OK', (-1, -1), wx.DefaultSize)
         b2 = wx.Button(self.panel, wx.NewId(), '&Cancel', (-1, -1), wx.DefaultSize)
         staline = wx.StaticLine(self.panel, wx.NewId(), (-1, -1), (-1, 2), wx.LI_HORIZONTAL)
+
+        b1.SetDefault()
 
         self.Bind(wx.EVT_BUTTON, self.OkClick, b1)
         self.Bind(wx.EVT_BUTTON, self.CancelClick, b2)
@@ -151,17 +153,29 @@ class CopyFrame(DittoheadFrame):
     def __init__(self, *args, **kwds):
         DittoheadFrame.__init__(self, *args, **kwds)
 
+        self.selected_study = None
+        self.last_refreshed_files = None
+        self.files = []
+
         self.panel = wx.Panel(self, wx.ID_ANY)
+
         self.label_studies = wx.StaticText(self.panel, wx.ID_ANY, "Choose a study:")
         self.list_studies = wx.ListBox(self.panel, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
+
         self.label_username = wx.StaticText(self.panel, wx.ID_ANY, "Username")
         self.label_password = wx.StaticText(self.panel, wx.ID_ANY, "Password")
         self.combo_username = wx.ComboBox(self.panel, wx.ID_ANY, "")
         self.text_password = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_PASSWORD)
+
         self.copy_button = wx.Button(self.panel, wx.ID_ANY, "Copy")
         self.cancel_button = wx.Button(self.panel, wx.ID_ANY, "Cancel")
+
         self.edit_study_button = wx.Button(self.panel, wx.ID_ANY, "Edit Study")
         self.add_study_button = wx.Button(self.panel, wx.ID_ANY, "Add Study")
+
+        self.copy_status = wx.StaticText(self.panel, wx.ID_ANY, "Copying:")
+        self.copy_gauge = wx.Gauge(self.panel, wx.ID_ANY)
+
         self.label_preview = wx.StaticText(self.panel, wx.ID_ANY, "Preview:")
         self.text_preview = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_MULTILINE)
 
@@ -175,8 +189,10 @@ class CopyFrame(DittoheadFrame):
         self.SetTitle("dittohead")
         self.edit_study_button.Enable(False)
         self.copy_button.Enable(False)
+        self.copy_button.SetDefault()
 
-
+        self.copy_status.Hide()
+        self.copy_gauge.Hide()
         # end wxGlade
 
     def __bind_events(self):
@@ -213,6 +229,10 @@ class CopyFrame(DittoheadFrame):
         right_pane.Add(self.label_password, 0, wx.EXPAND)
         right_pane.Add(self.text_password, 0, wx.EXPAND)
         right_pane.Add(self.label_preview, 0, wx.EXPAND)
+
+        right_pane.Add(self.copy_status, 0, wx.EXPAND)
+        right_pane.Add(self.copy_gauge, 0, wx.EXPAND)
+
         right_pane.Add(self.text_preview, 1, wx.EXPAND | wx.ALL, 0)
         
         hgap, vgap = 0, 0
@@ -257,7 +277,7 @@ class CopyFrame(DittoheadFrame):
             self.edit_study_button.Enable(False)
 
     def EnableCopy(self):
-        value = self.selected_study and self.combo_username.GetValue() != "" and self.text_password.GetValue() != ""
+        value = self.selected_study != None and self.combo_username.GetValue() != "" and self.text_password.GetValue() != ""
         self.copy_button.Enable(value)
 
     def UserChanged(self, event):
@@ -267,12 +287,17 @@ class CopyFrame(DittoheadFrame):
         self.EnableCopy()
 
     def StudyClick(self, event):
+        selection = self.list_studies.GetStringSelection()
+        if selection == self.selected_study:
+            return
+
         self.selected_study = self.list_studies.GetStringSelection()
 
         for s in self.studies:
             if s["name"] == self.selected_study:
                 if "last_time" in s:
-                    self.label_preview.SetValue("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"]))
+                    self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"]))
+                    self.Layout()
 
                 users = self.combo_username
                 previous_user_value = users.GetValue()
@@ -281,10 +306,11 @@ class CopyFrame(DittoheadFrame):
                 if self.selected_study in self.last_users:
                     for u in self.last_users[self.selected_study]:
                         users.Append(u)
-                        if self.text_password.GetValue() == "":
-                            users.SetSelection(0)
-                        else:
-                            users.SetValue(previous_user_value)
+
+                if self.text_password.GetValue() == "" and users.GetCount() > 0:
+                    users.SetSelection(0)
+                else:
+                    users.SetValue(previous_user_value)
 
                 self.UpdatePreview()
                 break
@@ -328,13 +354,14 @@ class CopyFrame(DittoheadFrame):
                 num /= 1024.0
             return "%.1f%s%s" % (num, 'Yi', suffix)
 
+        self.last_refreshed_files = datetime.now()
 
         for s in self.studies:
             if s["name"] == self.selected_study:
                 if "last_time" in s:
                     last_time = s["last_time"]
                 else:
-                    last_time = datetime.datetime(1900,1,1)
+                    last_time = datetime(1969,8,8)
 
                 result = []
 
@@ -351,12 +378,12 @@ class CopyFrame(DittoheadFrame):
                         full_file_path = os.path.join(root,name)
                         remote_path = os.path.relpath(full_file_path, walk_path).replace("\\", "/")
 
-                        size = sizeof_fmt(os.path.getsize(full_file_path))
                         epoch = os.path.getmtime(full_file_path)
-                        mtime = datetime.datetime.fromtimestamp(epoch)
+                        mtime = datetime.fromtimestamp(epoch)
 
                         if mtime > last_time:
-                            result.append(dict(local_path = full_file_path, remote_path = remote_path, size = size, mtime = mtime, selected = True))
+                            size = sizeof_fmt(os.path.getsize(full_file_path))
+                            result.append(dict(local_path = full_file_path, remote_path = remote_path, size = size, mtime = mtime, will_copy = True))
 
                     if '.git' in dirs:
                         dirs.remove('.git')
@@ -370,36 +397,59 @@ class CopyFrame(DittoheadFrame):
         return []
 
 
+    def PrepareUIForCopying(self, files):
+        self.copy_status.Show()
+        self.copy_gauge.Show()
+        self.copy_button.Hide()
+        self.Layout()
+
+    def CopyingFile(self, num, total, local_path):
+        self.copy_gauge.SetRange(total)
+        self.copy_gauge.SetValue(num)
+        self.copy_status.SetLabel("Copying " + local_path)
+        self.Layout()
+        
 
     def CopyClick(self, event):
         study_name = self.list_studies.GetStringSelection()
         username = self.combo_username.GetValue()
         password = self.text_password.GetValue()
 
-        if not self.selected_study: raise Exception("You didn't select a study.")
-        if not self.username: raise Exception("You didn't enter a user name.")
-        if not self.password: raise Exception("You didn't enter your password.")
+        if not study_name: raise Exception("You didn't select a study.")
+        if not username: raise Exception("You didn't enter a user name.")
+        if not password: raise Exception("You didn't enter your password.")
 
         for s in self.studies:
-            if s["name"] == self.study_name:
+            if s["name"] == study_name:
                 study = s
                 break
         else:
             study = None
 
         if study == None: raise Exception("Could not find information about study {0}".format(study_name))
-        if not study["local_directory"]: raise Exception("No data about where to find local data for study {0}".format(study_name))
+        if not study["remote_directory"]: raise Exception("No remote directory set for study {0}".format(study_name))
 
-        x = study["local_directory"]
 
-        # TODO: also copy a little .dittohead info file with our extra_contacts or whatever other metadata
+        def remove_keys(h):
+            for k in ["will_copy", "size"]:
+                h.pop(k, None)
+            return h
+
+        files = filter(lambda x: x["will_copy"], self.files)
+        files = map(remove_keys, files)
+
+        self.PrepareUIForCopying(files)
 
         copy_files(
+            window_owner=self,
             user=username,
             password=password, 
             files=files,
-            study=study_name,
+            study=study,
         )
+
+        self.copy_status.SetLabel("Copy complete")
+        self.Layout()
 
         # Reorder self.last_users or add a new entry if needed
         if study_name not in self.last_users:
@@ -409,6 +459,12 @@ class CopyFrame(DittoheadFrame):
         if username in last:
             last.remove(username)
         last.insert(0, username)
+
+        study["last_time"] = self.last_refreshed_files
+
+        dlg = wx.MessageDialog(self, "{0} files were copied.".format(len(files)), "Copy successful", wx.OK | wx.ICON_INFORMATION)
+        dlg.ShowModal()
+        dlg.Destroy()
 
         self.Destroy()
 

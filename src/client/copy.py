@@ -1,5 +1,6 @@
 import paramiko
 import os
+import posixpath
 import platform
 import logging
 
@@ -28,31 +29,54 @@ def mkdir(ftp, path, mode=511, ignore_existing=False):
             raise
 
 
-def copy_files(user, password, files, study, remotehost="guero"):
+def copy_files(window_owner, user, password, files, study, remotehost="guero"):
+    """
+    User and password are unencrypted in memory.
+    Probably not great.
+
+    `files` is a list of hashes which contains
+        - local_path    (absolute, for easier fun)
+        - remote_path   (relative)
+        - mtime         (in case we want to force mtimes to match?)
+
+    `study` is the hash with name, remote_directory, extra_contacts, and so on
+
+    """
     log = logging.getLogger('dittohead.copy')
 
-    log.info("Starting copy of %s files for %s to %s in study directory %s", len(files), user, remotehost, study)
+    log.info("Starting copy of %s files for %s to %s in study %s", len(files), user, remotehost, study['name'])
 
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(remotehost, username=user, password=password)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(remotehost, username=user, password=password)
 
-        ftp = ssh.open_sftp()
-        for f in files:
-            remote_path = f['remote_path']
-            local_path  = f['local_path']
-            # TODO: make directory for remote path if necessary
-            ftp.mkdir("." + remotefile)
-            put_file(ftp, local_path, "." + remote_path)
+    ftp = ssh.open_sftp()
+    final_folder_name = "dittohead-{0}-tmp".format(study['name'])
+    upload_folder_name = "." + final_folder_name
 
-        ftp.close()
+    log.debug("Creating folder " + upload_folder_name)
+    # TODO: After testing, turn off ignore_existing here, we should explode if we collide with something that already exists
+    mkdir(ftp, upload_folder_name, ignore_existing=True)
 
-        ssh.exec_command("mv '.{0}' '{0}'".format(remotefile))
+    index = 1
+    for f in files:
+        log.debug("Operating on file {0}".format(f))
+        remote_path = f['remote_path']
+        local_path  = f['local_path']
+        full_remote_path = posixpath.join(upload_folder_name, remote_path)
 
-        ssh.close()
-        
-    except Exception as e:
-        # If this was a UI program, show some kind of helpful error here.
-        log.error("Got an exception: %s", e)
-        raise e
+        # make directory for remote path if necessary
+        full_remote_folder = posixpath.dirname(full_remote_path)
+        mkdir(ftp, full_remote_folder, ignore_existing=True)
+
+        window_owner.CopyingFile(index, len(files), local_path)
+        # TODO: This supports a callback that sends bytes/total bytes, surface to UI?
+        ftp.put(local_path, upload_folder_name + "/" + remote_path)
+        index += 1
+
+    ftp.close()
+
+    ssh.exec_command("mv '{0}' '{1}'".format(upload_folder_name, final_folder_name))
+
+    ssh.close()
+    
