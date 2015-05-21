@@ -10,9 +10,8 @@ A secure one-way file synchronizer that never forgets anything.
 
 - UI
   - Nice browse box to select local directory for studies
-  - Implement FilesToCopy
-  - Display of "what is about to happen"
-  - Better exception handling, show error to user and die instead of just logging
+  - Better exception handling, show error to user in wx interface and die instead of just logging
+  - OK and Cancel should support Enter and Escape (or whatever the local OS standard is)
 - Actually decide what the backend should do
 - Pull out shared logging and yaml loading code between server/client, bleh
 

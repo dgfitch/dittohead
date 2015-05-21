@@ -34,6 +34,8 @@ class StudyFrame(DittoheadFrame):
     def __init__(self, *args, **kwds):
         DittoheadFrame.__init__(self, *args, **kwds)
 
+        self.callback = None
+
         LABEL_WIDTH = 300
         TEXTBOX_WIDTH = 300
 
@@ -108,20 +110,26 @@ class StudyFrame(DittoheadFrame):
         if new_name == "":
             raise Exception("Trying to save changes to a nonexistent study {0} in hash {1}".format(self.original_name, studies))
 
-        if new_name != self.original_name:
-            for s in self.studies:
-                if s["name"] == new_name:
-                    raise Exception("Tried to rename study originally named {0} as {1} when a study with that name already existed.".format(self.original_name, new_name))
-
-        for s in self.studies:
-            if s["name"] == self.original_name:
-                break
+        if self.isNew:
+            s = {}
+            self.studies.append(s)
         else:
-            raise Exception("Trying to save changes to a nonexistent study {0} in hash {1}".format(self.original_name, studies))
+            if new_name != self.original_name:
+                for s in self.studies:
+                    if s["name"] == new_name:
+                        raise Exception("Tried to rename study originally named {0} as {1} when a study with that name already existed.".format(self.original_name, new_name))
+
+            for s in self.studies:
+                if s["name"] == self.original_name:
+                    break
+            else:
+                raise Exception("Trying to save changes to a nonexistent study {0} in hash {1}".format(self.original_name, studies))
 
         s["name"] = new_name
         s["extra_contacts"] = self.text_extra_contacts.GetValue()
         s["local_directory"] = self.text_local_directory.GetValue()
+
+        if self.callback: self.callback()
         
         self.Destroy()
 
@@ -169,6 +177,9 @@ class CopyFrame(DittoheadFrame):
         self.Bind(wx.EVT_BUTTON, self.AddStudyClick, self.add_study_button)
 
         self.Bind(wx.EVT_LISTBOX, self.StudyClick, self.list_studies)
+        self.Bind(wx.EVT_TEXT, self.UserChanged, self.combo_username)
+        self.Bind(wx.EVT_COMBOBOX, self.UserChanged, self.combo_username)
+        self.Bind(wx.EVT_TEXT, self.PasswordChanged, self.text_password)
 
     def __do_layout(self):
         # begin wxGlade: CopyFrame.__do_layout
@@ -214,21 +225,39 @@ class CopyFrame(DittoheadFrame):
 
 
     def LoadStudies(self, log, studies, last_users):
+        self.log = log
         self.studies = studies
         self.last_users = last_users
+        self.ShowStudies()
 
-        for s in studies:
+
+    def ShowStudies(self):
+        self.list_studies.Clear()
+        for s in self.studies:
             self.list_studies.Append(s["name"])
 
     
     def CancelClick(self, event):
         self.Destroy()
 
-    def StudyClick(self, event):
-        self.selected_study = self.list_studies.GetStringSelection()
+    def EnableEditStudy(self):
         if self.selected_study:
             self.edit_study_button.Enable(True)
-            self.copy_button.Enable(True)
+        else:
+            self.edit_study_button.Enable(False)
+
+    def EnableCopy(self):
+        value = self.selected_study and self.combo_username.GetValue() != "" and self.text_password.GetValue() != ""
+        self.copy_button.Enable(value)
+
+    def UserChanged(self, event):
+        self.EnableCopy()
+
+    def PasswordChanged(self, event):
+        self.EnableCopy()
+
+    def StudyClick(self, event):
+        self.selected_study = self.list_studies.GetStringSelection()
 
         for s in self.studies:
             if s["name"] == self.selected_study:
@@ -236,6 +265,7 @@ class CopyFrame(DittoheadFrame):
                     self.label_preview.SetValue("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"]))
 
                 users = self.combo_username
+                previous_user_value = users.GetValue()
                 users.Clear()
 
                 if self.selected_study in self.last_users:
@@ -243,18 +273,25 @@ class CopyFrame(DittoheadFrame):
                         users.Append(u)
                         if self.text_password.GetValue() == "":
                             users.SetSelection(0)
+                        else:
+                            users.SetValue(previous_user_value)
 
                 self.UpdatePreview()
+
+        self.EnableEditStudy()
+        self.EnableCopy()
 
 
     def AddStudyClick(self, event):
         study_frame = StudyFrame(self, wx.ID_ANY, "Add Study")
         study_frame.AddStudy(self.studies)
+        study_frame.callback = self.ShowStudies
         study_frame.Show()
 
     def EditStudyClick(self, event):
         study_frame = StudyFrame(self, wx.ID_ANY, "Edit Study")
         study_frame.EditStudy(self.studies, self.list_studies.GetStringSelection())
+        study_frame.callback = self.ShowStudies
         study_frame.Show()
 
 
@@ -263,25 +300,62 @@ class CopyFrame(DittoheadFrame):
         if len(files) == 0:
             p = "No new data files found."
         else:
-            p = files.join("\n")
+            p = "New files found:\n\n"
+            for f in files:
+                p += "Path: '{0}', {1}, modified at {2}\n => {3}\n\n".format(f['local_path'], f['size'], f['mtime'], f['remote_path'])
 
         self.text_preview.SetValue(p)
 
     def FilesToCopy(self):
         if not self.selected_study: return []
+
+        # Nicked from http://stackoverflow.com/questions/1094841/
+        def sizeof_fmt(num, suffix='B'):
+            for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+                if abs(num) < 1024.0:
+                    return "%3.1f%s%s" % (num, unit, suffix)
+                num /= 1024.0
+            return "%.1f%s%s" % (num, 'Yi', suffix)
+
+
         for s in self.studies:
             if s["name"] == self.selected_study:
                 if "last_time" in s:
                     last_time = s["last_time"]
                 else:
-                    last_time = datetime.date(1900,1,1)
+                    last_time = datetime.datetime(1900,1,1)
 
-                stuff = s["local_directory"]
-                # TODO: Iterate over local directory looking for things > last_time
+                result = []
 
-                break
-        else:
-            return []
+                walk_path = s["local_directory"]
+                if not os.path.isdir(walk_path):
+                    return []
+
+                # Iterate over local directory looking for things > last_time
+
+                wait = wx.BusyCursor()
+
+                for root, dirs, files in os.walk(walk_path):
+                    for name in files:
+                        full_file_path = os.path.join(root,name)
+                        remote_path = os.path.relpath(full_file_path, walk_path).replace("\\", "/")
+
+                        size = sizeof_fmt(os.path.getsize(full_file_path))
+                        epoch = os.path.getmtime(full_file_path)
+                        mtime = datetime.datetime.fromtimestamp(epoch)
+
+                        if mtime > last_time:
+                            result.append(dict(local_path = full_file_path, remote_path = remote_path, size = size, mtime = mtime))
+
+                    if '.git' in dirs:
+                        dirs.remove('.git')
+
+
+                del wait
+
+                return result
+
+        return []
 
 
 
@@ -306,7 +380,7 @@ class CopyFrame(DittoheadFrame):
 
         x = study["local_directory"]
 
-        # TODO: also copy a little .dittohead info file with our extra_contacts
+        # TODO: also copy a little .dittohead info file with our extra_contacts or whatever other metadata
 
         copy_files(
             user=username, password=password, 

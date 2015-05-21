@@ -15,7 +15,7 @@ def configure_logging():
     fh.setLevel(logging.DEBUG)
     # create console handler with a less-verbose log level
     ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
+    ch.setLevel(logging.INFO)
     # create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     fh.setFormatter(formatter)
@@ -27,14 +27,14 @@ def configure_logging():
     return log
 
 
-def load_yaml(filename):
+def load_yaml(filename, default={}):
     if os.path.isfile(filename):
         stream = open(filename, 'r')
         x = yaml.load(stream)
         stream.close()
         return x
     else:
-        return {}
+        return default
 
 def save_yaml(x, filename):
     with open(filename, 'w') as outfile:
@@ -44,11 +44,11 @@ def save_yaml(x, filename):
 log = configure_logging()
 
 
-studies = load_yaml("studies.yaml")
+studies = load_yaml("studies.yaml", [])
 if len(studies) < 1:
     log.warn("No studies found in YAML settings file.")
 
-last_users = load_yaml("last_users.yaml")
+last_users = load_yaml("last_users.yaml", {})
 
 app = wx.App(False)
 copy_frame = CopyFrame(None, wx.ID_ANY, "", size=wx.Size(800,600))
