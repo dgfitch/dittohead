@@ -1,4 +1,4 @@
 should_demote: false
 subprocess_user_name: "dittohead-worker"
-input_directory: "/var/tmp/dittohead-input"
+input_directory: "/home/fitch/dittohead-input"
 

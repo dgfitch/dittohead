@@ -25,7 +25,15 @@ def configure_logging():
     log.addHandler(ch)
     return log
 
+
+log.info("Initializing for directory {0}".format(input_directory))
+
+p = pwd.getpwnam(config['subprocess_user_name'])
+os.setgid(p.pw_uid)
+os.setuid(p.pw_gid)
+
 input_directory = sys.argv[1]
-log.info("Working on directory {0}".format(input_directory))
+log.info("Working on directory {0} using uid {1} and gid {2}".format(input_directory, p.pw_uid, p.pw_gid))
+
 
 #### NOW STUFF HAPPENS

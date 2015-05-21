@@ -5,8 +5,10 @@ import logging
 import yaml
 import pwd
 import subprocess
+import time
 import sys
 from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 
 def load_yaml(filename):
@@ -40,51 +42,39 @@ def configure_logging():
     return log
 
 
-def operate(log, config, directory):
-    if config['should_demote']:
-        pw_record = pwd.getpwnam(config['subprocess_user_name'])
-        user_name      = pw_record.pw_name
-        user_home_dir  = pw_record.pw_dir
-        user_uid       = pw_record.pw_uid
-        user_gid       = pw_record.pw_gid
-        env = os.environ.copy()
-        env[ 'HOME'     ]  = user_home_dir
-        env[ 'LOGNAME'  ]  = user_name
-        env[ 'USER'     ]  = user_name
-        report_ids(log, 'starting ' + str(args))
+
+class DittoheadWatcher(FileSystemEventHandler):
+    def __init__(self, config, *args, **kwargs):
+        super(DittoheadWatcher, self).__init__(*args, **kwargs)
+        self.log = configure_logging()
+        self.config = config
+
+    def on_created(self, event):
+        self.log.info("Got created: {0}".format(event))
+        # If the thing that was created was a directory and it doesn't start with ., throw a warning
+        #if event.src_path
+  
+    def on_moved(self, event):
+        self.log.info("Got moved: {0}".format(event))
+        # If the thing that moved was a directory
+
+    def operate(self, directory):
         process = subprocess.Popen(
-            ["dittohead_worker.py", directory], preexec_fn=demote(user_uid, user_gid), env=env
+            ["dittohead_worker.py", directory]
         )
-        report_ids(log, 'finished ' + str(args))
-
-    else: # Run without changing gid and uid
-        process = subprocess.Popen(
-            ["dittohead_worker.py", directory]] 
-        )
-
-
-
-def demote(log, user_uid, user_gid):
-    def result():
-        report_ids(log, 'starting demotion')
-        os.setgid(user_gid)
-        os.setuid(user_uid)
-        report_ids(log, 'finished demotion')
-    return result
-
-
-def report_ids(log, msg):
-    log.info( 'uid, gid = %d, %d; %s' % (os.getuid(), os.getgid(), msg) )
-
 
 
 def main():
-    log = configure_logging()
     config = load_yaml("config.yaml")
+    input = config["input_directory"]
 
-    # https://pypi.python.org/pypi/watchdog
+    # First, if there are any pending things in the directory, operate on them!
+    # TODO
+
+    # Using Watchdog: https://pypi.python.org/pypi/watchdog
     observer = Observer()
-    observer.schedule(operate, config["input_directory"])
+    watcher = DittoheadWatcher(config)
+    observer.schedule(watcher, input)
     observer.start()
     try:
         while True:
