@@ -15,7 +15,6 @@ Uses:
 - Nice native browse box to select local directory for studies
 - Better exception handling, show error to user in wx interface and die instead of just logging
 - Nicer OSX icon
-- Combine the two OS-specific packaging things into one config? wxpython people do not recommend this?
 
 
 ## Packaging
@@ -23,8 +22,8 @@ Uses:
 ### Windows client
 
 1. `pip install py2exe`
-2. In `$DITTOHEAD_ROOT/src/client` run `python win_compile.py py2exe`
-3. Your stuff is in
+2. In `$DITTOHEAD_ROOT/src/client` run `python win_setup.py py2exe`
+3. Your app is in `win_dist`
 
 ### OSX client
 
@@ -32,7 +31,8 @@ Uses:
 2. `pip install py2app`
 3. Edit `VIRTUALENV/mac_dittohead/lib/python2.7/site-packages/py2app/recipes/virtualenv.py` 
    and change `load_module` to `_load_module` and `scan_code` to `_scan_code`.
-4. In `$DITTOHEAD_ROOT/src/client` run `python setup.py py2app`
+4. In `$DITTOHEAD_ROOT/src/client` run `python osx_setup.py py2app`
+5. Your app is in `dist`
 
 ## Tips for running on OSX in a virtualenv
 

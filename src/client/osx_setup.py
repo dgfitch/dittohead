@@ -12,20 +12,26 @@ DATA_FILES = []
 OPTIONS = {
     'argv_emulation': True,
     'arch': 'i386', 
-    'iconfile': 'dittohead.ico', # maybe we need an icns file
+    'iconfile': 'dittohead.ico', # TODO: we need an icns file
     'plist': {
         'CFBundleName': 'Dittohead',
         'CFBundleShortVersionString':'1.0.0', # must be in X.X.X format
         'CFBundleVersion': '1.0.0',
-        'CFBundleIdentifier':'edu.wisc.dittohead', #optional
+        'CFBundleIdentifier':'edu.wisc.dittohead', 
         'NSHumanReadableCopyright': 'None',
         'CFBundleDevelopmentRegion': 'English',
-    }   
+    },
+    'dist_dir': 'osx_dist',
 }
 
 setup(
     app=APP,
     data_files=DATA_FILES,
-    options={'py2app': OPTIONS},
+    options={
+        'py2app': OPTIONS
+        "build": {
+            'build_base': 'osx_build',
+        }
+    },
     setup_requires=['py2app'],
 )
