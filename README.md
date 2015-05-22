@@ -152,26 +152,30 @@ This gets real clumsy. Maybe there are better ways.
 
 7. Create a linkage to the base wx install (because the wxPython installer requires admin privileges and can't be installed in a virtualenv:
 
-    echo "/usr/local/lib/wxPython-unicode-2.8.12.1/lib/python2.7/site-packages/wx-2.8-mac-unicode" >
-    /home/fitch/Downloads/virtualenv-12.1.1/mac_dittohead/lib/python2.7/site-packages/wx.pth
+```
+echo "/usr/local/lib/wxPython-unicode-2.8.12.1/lib/python2.7/site-packages/wx-2.8-mac-unicode" >
+/home/fitch/Downloads/virtualenv-12.1.1/mac_dittohead/lib/python2.7/site-packages/wx.pth
+```
 
 8. Create `mac_dittohead/bin/wxpy`:
 
-    #!/bin/bash
+```bash
+#!/bin/bash
 
-    # what real Python executable to use
-    PYTHON=/usr/bin/python
+# what real Python executable to use
+PYTHON=/usr/bin/python
 
-    # find the root of the virtualenv, it should be the parent of the dir this 
-    script is in
-    ENV=`$PYTHON -c "import os; print 
-    os.path.abspath(os.path.join(os.path.dirname(\"$0\"), '..'))"`
+# find the root of the virtualenv, it should be the parent of the dir this 
+script is in
+ENV=`$PYTHON -c "import os; print 
+os.path.abspath(os.path.join(os.path.dirname(\"$0\"), '..'))"`
 
-    # now run Python with the virtualenv set as Python's HOME and set to prefer 
-    32 bit
-    export PYTHONHOME=$ENV
-    export VERSIONER_PYTHON_PREFER_32_BIT=yes
-    exec $PYTHON "$@"
+# now run Python with the virtualenv set as Python's HOME and set to prefer 
+32 bit
+export PYTHONHOME=$ENV
+export VERSIONER_PYTHON_PREFER_32_BIT=yes
+exec $PYTHON "$@"
+```
 
 9. Finally, now you can go into `$DITTOHEAD_ROOT/src/client` and run `wxpy dittohead.py`.
 
