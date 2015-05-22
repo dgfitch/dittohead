@@ -32,7 +32,7 @@ Uses:
 3. Edit `VIRTUALENV/mac_dittohead/lib/python2.7/site-packages/py2app/recipes/virtualenv.py` 
    and change `load_module` to `_load_module` and `scan_code` to `_scan_code`.
 4. In `$DITTOHEAD_ROOT/src/client` run `python osx_setup.py py2app`
-5. Your app is in `dist`
+5. Your app is in `osx_dist`
 
 ## Tips for running on OSX in a virtualenv
 
