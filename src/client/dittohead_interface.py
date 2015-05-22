@@ -410,6 +410,10 @@ class CopyFrame(DittoheadFrame):
         self.Layout()
         
 
+    def MacReopenApp(self):
+        """Called when the dock icon is clicked on OSX"""
+        self.GetTopWindow().Raise()
+
     def CopyClick(self, event):
         study_name = self.list_studies.GetStringSelection()
         username = self.combo_username.GetValue()

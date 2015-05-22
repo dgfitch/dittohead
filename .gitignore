@@ -60,3 +60,14 @@ dittohead.log
 last_users.yaml
 last_times.yaml
 studies.yaml
+
+# Client packaging directories
+win_build/
+win_dist/
+osx_build/
+osx_dist/
+
+
+# OSX rulez
+.DS_Store
+._.DS_Store
