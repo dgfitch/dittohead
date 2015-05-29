@@ -1,9 +1,20 @@
 #!/usr/bin/env python
 
 import os
-import datetime
-import logging
 import sys
+import pwd
+import datetime
+import yaml
+import logging
+
+def load_yaml(filename):
+    if os.path.isfile(filename):
+        stream = open(filename, 'r')
+        x = yaml.load(stream)
+        stream.close()
+        return x
+    else:
+        return {}
 
 def configure_logging():
     # From the logging cookbook: https://docs.python.org/2/howto/logging-cookbook.html#logging-cookbook
@@ -11,7 +22,7 @@ def configure_logging():
     log.setLevel(logging.DEBUG)
     # create file handler which logs debug messages
     # TODO: This should probably be stored somewhere smarter
-    fh = logging.FileHandler("dittohead-worker-{0}-{1}.log".format(os.getpid(), datetime.now()))
+    fh = logging.FileHandler("dittohead-worker-{0}-{1}.log".format(os.getpid(), datetime.datetime.now()))
     fh.setLevel(logging.DEBUG)
     # create console handler with a less-verbose log level
     ch = logging.StreamHandler()
@@ -26,13 +37,15 @@ def configure_logging():
     return log
 
 
+log = configure_logging()
+input_directory = sys.argv[1]
 log.info("Initializing for directory {0}".format(input_directory))
 
+config = load_yaml("config.yaml")
 p = pwd.getpwnam(config['subprocess_user_name'])
 os.setgid(p.pw_uid)
 os.setuid(p.pw_gid)
 
-input_directory = sys.argv[1]
 log.info("Working on directory {0} using uid {1} and gid {2}".format(input_directory, p.pw_uid, p.pw_gid))
 
 

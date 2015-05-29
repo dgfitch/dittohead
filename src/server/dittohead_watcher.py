@@ -3,7 +3,6 @@
 import os
 import logging
 import yaml
-import pwd
 import subprocess
 import time
 import sys
@@ -49,18 +48,30 @@ class DittoheadWatcher(FileSystemEventHandler):
         self.log = configure_logging()
         self.config = config
 
+    def path_is_period(self, path):
+        return os.path.basename(path).startswith(".")
+
     def on_created(self, event):
         self.log.info("Got created: {0}".format(event))
-        # If the thing that was created was a directory and it doesn't start with ., throw a warning
-        #if event.src_path
+        if event.is_directory:
+            # If the thing that was created was a directory and it doesn't start with ., throw a warning
+            if not self.path_is_period(event.src_path):
+                self.log.warn("Directory was created without a period: {0}".format(event.src_path))
+            else:
+                self.log.info("New directory was created: {0}".format(event.src_path))
   
     def on_moved(self, event):
-        self.log.info("Got moved: {0}".format(event))
-        # If the thing that moved was a directory
+        if event.is_directory:
+            # If the thing that moved was a directory,
+            # and its new name does not start with a period,
+            # we should operate on it
+            if self.path_is_period(event.src_path) and not self.path_is_period(event.dest_path):
+                self.log.info("Got moved directory, firing watcher: {0}".format(event))
+                self.operate(event.dest_path)
 
     def operate(self, directory):
         process = subprocess.Popen(
-            ["dittohead_worker.py", directory]
+            ["python", "dittohead_worker.py", directory]
         )
 
 

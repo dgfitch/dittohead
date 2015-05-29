@@ -4,6 +4,11 @@ Uses:
 
 - [watchdog](http://pythonhosted.org/watchdog/)
 
+## Configure
+
+1. `pip install watchdog` (in a virtualenv if you prefer)
+2. Edit config.yaml
+
 ## TODO
 
 - Actually decide what the backend should do
