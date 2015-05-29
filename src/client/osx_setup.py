@@ -12,7 +12,7 @@ DATA_FILES = []
 OPTIONS = {
     'argv_emulation': True,
     'arch': 'i386', 
-    'iconfile': 'dittohead.ico', # TODO: we need an icns file
+    'iconfile': 'dittohead.icns',
     'plist': {
         'CFBundleName': 'Dittohead',
         'CFBundleShortVersionString':'1.0.0', # must be in X.X.X format
