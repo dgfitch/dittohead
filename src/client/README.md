@@ -13,8 +13,6 @@ Uses:
 
 - Make the stupid `copy_gauge` size right when it shows up
 - Nice native browse box to select local directory for studies
-- Better exception handling, show error to user in wx interface and die instead of just logging
-- Nicer OSX icon
 
 
 ## Packaging

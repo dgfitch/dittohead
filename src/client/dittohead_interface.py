@@ -1,9 +1,10 @@
 import wx
 import gettext
 import os.path
+import sys, traceback
 from datetime import *
 
-from copy import copy_files
+from copy import copy_files, AuthenticationException
 
 # Hack so icon works right on windows, see http://stackoverflow.com/questions/15223952/wxpython-icon-for-task-bar
 """
@@ -184,6 +185,7 @@ class CopyFrame(DittoheadFrame):
         self.__do_layout()
         # end wxGlade
 
+
     def __set_properties(self):
         # begin wxGlade: CopyFrame.__set_properties
         self.SetTitle("dittohead")
@@ -254,8 +256,25 @@ class CopyFrame(DittoheadFrame):
         # end wxGlade
 
 
+    def showWarningDialog(self, message, caption="Warning"):
+        dlg = wx.MessageDialog(self, message, caption, wx.OK | wx.ICON_WARNING)
+        dlg.ShowModal()
+        dlg.Destroy()
+
+    def __setup_exception_handling(self):
+        def handler(*exc_info):
+            message = "".join(traceback.format_exception(*exc_info))
+            self.log.error(message)
+            self.showWarningDialog(message, caption = "Exception")
+
+        None
+        sys.excepthook = handler
+
+
     def LoadStudies(self, log, studies, last_users):
         self.log = log
+        self.__setup_exception_handling()
+
         self.studies = studies
         self.last_users = last_users
         self.ShowStudies()
@@ -298,6 +317,8 @@ class CopyFrame(DittoheadFrame):
                 if "last_time" in s:
                     self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"]))
                     self.Layout()
+                else:
+                    self.label_preview.SetLabel("Preview: ({0} appears to have never ran on this machine yet)".format(self.selected_study))
 
                 users = self.combo_username
                 previous_user_value = users.GetValue()
@@ -403,6 +424,12 @@ class CopyFrame(DittoheadFrame):
         self.copy_button.Hide()
         self.Layout()
 
+    def PrepareUIDoneWithCopying(self):
+        self.copy_status.Hide()
+        self.copy_gauge.Hide()
+        self.copy_button.Show()
+        self.Layout()
+
     def CopyingFile(self, num, total, local_path):
         self.copy_gauge.SetRange(total)
         self.copy_gauge.SetValue(num)
@@ -419,9 +446,16 @@ class CopyFrame(DittoheadFrame):
         username = self.combo_username.GetValue()
         password = self.text_password.GetValue()
 
-        if not study_name: raise Exception("You didn't select a study.")
-        if not username: raise Exception("You didn't enter a user name.")
-        if not password: raise Exception("You didn't enter your password.")
+
+        if not study_name: 
+            self.showWarningDialog("You didn't select a study.")
+            return
+        if not username:
+            self.showWarningDialog("You didn't enter a user name.")
+            return
+        if not password: 
+            self.showWarningDialog("You didn't enter your password.")
+            return
 
         for s in self.studies:
             if s["name"] == study_name:
@@ -430,8 +464,13 @@ class CopyFrame(DittoheadFrame):
         else:
             study = None
 
-        if study == None: raise Exception("Could not find information about study {0}".format(study_name))
-        if not study["remote_directory"]: raise Exception("No remote directory set for study {0}".format(study_name))
+        if study == None:
+            self.showWarningDialog("Could not find information about study {0}".format(study_name))
+            return
+
+        if not study["remote_directory"]:
+            self.showWarningDialog("No remote directory set for study {0}".format(study_name))
+            return
 
 
         def remove_keys(h):
@@ -444,16 +483,21 @@ class CopyFrame(DittoheadFrame):
 
         self.PrepareUIForCopying(files)
 
-        copy_files(
-            window_owner=self,
-            user=username,
-            password=password, 
-            files=files,
-            study=study,
-        )
+        try:
+            copy_files(
+                window_owner=self,
+                user=username,
+                password=password, 
+                files=files,
+                study=study,
+            )
+        except AuthenticationException:
+            self.showWarningDialog("Authentication failed for user {0}. Did you mistype your password?".format(username))
+            self.PrepareUIDoneWithCopying()
+            return
 
-        self.copy_status.SetLabel("Copy complete")
-        self.Layout()
+
+        self.PrepareUIDoneWithCopying()
 
         # Reorder self.last_users or add a new entry if needed
         if study_name not in self.last_users:
