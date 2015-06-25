@@ -42,7 +42,7 @@ Uses:
 Everything is the same as it was for raw-data, so it can be locked down separately. We create a new directory inside /study/foo, like so:
 
     /study
-      /foo (foo:foo-grp 775 +s)
+      /foo (foo:foo-grp 3775)
         /raw-data (mri:foo-raw-data 3750)
         /raw-dittohead (dittohead:foo-grp 3750)
           /eprime
@@ -50,25 +50,6 @@ Everything is the same as it was for raw-data, so it can be locked down separate
           .
           .
           .
-
-
-### Permissions
-
-From Nate:
-
-    DITTO_ROOT (dittohead:dittohead, 3777) (eg, /data-dropbox)
-    DITTO_STUDY_ROOT (dittohead:dittohead, 3777) (eg, DITTO_ROOT/nccam3)
-    DITTO_STUDY_INBOX (dittohead:dittohead, 3777) (eg, DITTO_STUDY_ROOT/inbox)
-    Entries in DITTO_STUDY_INBOX will have group ownership set to dittohead. They'll only be *writable* by UPLOAD_USER.
-
-    DITTO_STUDY_PROCESSING (dittohead:dittohead, 700) (eg, DITTO_STUDY_ROOT/processing)
-    DITTO_STUDY_DONE (dittohead:dittohead, 700) (eg, DITTO_STUDY_ROOT/done)
-    STUDY_DESTINATION (dittohead:raw-data, 775) (eg, /study/nccam3/data-dropbox)
-
-    OK, permissions-wise, since `DITTO_STUDY_INBOX` is dittohead:dittohead, mode 3777, watcher (running as dittohead) can read there, and anyone can put things there. Watcher can move entries to `DITTO_STUDY_PROCESSING` and then to `DITTO_STUDY_DONE`. We can't delete them because they're owned by `UPLOAD_USER`, but root can purge stuff from `_DONE`. 
-
-    We probably don't want to call directories out on /study "dittohead" because someone will be annoyed by that. Still a fine project name.
-
 
 
 ## Notification

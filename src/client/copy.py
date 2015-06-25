@@ -13,7 +13,7 @@ class AuthenticationException(Exception):
 # Taken from http://stackoverflow.com/questions/4409502/directory-transfers-on-paramiko
 def put_dir(ftp, source, target):
     ''' Uploads the contents of the source directory to the target path. The
-        target directory needs to exists. All subdirectories in source are 
+        target directory needs to exist. All subdirectories in source are 
         created under target.
     '''
     for item in os.listdir(source):
@@ -57,19 +57,20 @@ def copy_files(window_owner, user, password, files, study, remotehost="guero"):
         ssh.connect(remotehost, username=user, password=password)
 
         ftp = ssh.open_sftp()
-        final_folder_name = "dittohead-{0}-tmp".format(study['name'])
+        final_folder_name = "{0}-tmp".format(study['name'])
+        final_folder_path = "{0}/{1}".format(study['remote_directory'], final_folder_name)
         upload_folder_name = "." + final_folder_name
+        upload_folder_path = "{0}/{1}".format(study['remote_directory'], upload_folder_name)
 
-        log.debug("Creating folder " + upload_folder_name)
-        # TODO: After testing, turn off ignore_existing here, we should explode if we collide with something that already exists
-        mkdir(ftp, upload_folder_name, ignore_existing=True)
+        log.debug("Creating folder " + upload_folder_path)
+        mkdir(ftp, upload_folder_path)
 
         index = 1
         for f in files:
             log.debug("Operating on file {0}".format(f))
             remote_path = f['remote_path']
             local_path  = f['local_path']
-            full_remote_path = posixpath.join(upload_folder_name, remote_path)
+            full_remote_path = posixpath.join(upload_folder_path, remote_path)
 
             # make directory for remote path if necessary
             full_remote_folder = posixpath.dirname(full_remote_path)
@@ -77,12 +78,14 @@ def copy_files(window_owner, user, password, files, study, remotehost="guero"):
 
             window_owner.CopyingFile(index, len(files), local_path)
             # TODO: This supports a callback that sends bytes/total bytes, surface to UI?
-            ftp.put(local_path, upload_folder_name + "/" + remote_path)
+            ftp.put(local_path, upload_folder_path + "/" + remote_path)
             index += 1
 
         ftp.close()
 
-        ssh.exec_command("mv '{0}' '{1}'".format(upload_folder_name, final_folder_name))
+        mv = "mv '{0}' '{1}'".format(upload_folder_path, final_folder_path)
+        log.debug("Running " + mv)
+        ssh.exec_command(mv)
 
         ssh.close()
         

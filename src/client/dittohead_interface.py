@@ -473,12 +473,13 @@ class CopyFrame(DittoheadFrame):
             return
 
 
+        files = filter(lambda x: x["will_copy"], self.files)
+
         def remove_keys(h):
             for k in ["will_copy", "size"]:
                 h.pop(k, None)
             return h
 
-        files = filter(lambda x: x["will_copy"], self.files)
         files = map(remove_keys, files)
 
         self.PrepareUIForCopying(files)
