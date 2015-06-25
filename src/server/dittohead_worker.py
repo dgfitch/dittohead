@@ -39,18 +39,37 @@ def configure_logging():
 
 log = configure_logging()
 input_directory = sys.argv[1]
-log.info("Initializing for directory {0}".format(input_directory))
+
+log.info("Initializing worker for directory {0}".format(input_directory))
+
+
+# NOW STUFF HAPPENS
 
 config = load_yaml("config.yaml")
-# Do we need to run as a different user? MAYBE NOT!
-#p = pwd.getpwnam(config['subprocess_user_name'])
-#os.setgid(p.pw_uid)
-#os.setuid(p.pw_gid)
 
-log.info("Working on directory {0} using uid {1} and gid {2}".format(input_directory, p.pw_uid, p.pw_gid))
+folder_name = os.path.basename(input_directory)
+study_name = folder_name.split("-")[0]
+
+study_location = os.join(config["study_directory"], study_name, config["study_dittohead_raw_folder_name"])
+processing_location = os.join(config["processing_directory"], folder_name)
+done_location = os.join(config["done_directory"], folder_name)
+
+log.info("Working on directory {0}, using processing location {1} and study location {2}".format(input_directory, processing_location, study_location))
 
 
-#### NOW STUFF HAPPENS
+# We move it into processing
+os.move(input_directory, processing_location)
 
-os.rename()
+
+# From there we copy the files to the study directory
+# TODO: figure out some way to use rsync to ensure no filename collisions?
+rsync_command = "rsync -avzBupOMGLOLZ {0} {1}".format(processing_location, study_location)
+log.info("Running rsync: " + rsync_command)
+#os.system(rsync_command)
+
+
+log.info("Done processing location {0} to study location {1}, leaving in {2}".format(processing_location, study_location, done_location))
+
+# Success! We move it into done
+os.move(processing_location, done_location)
 

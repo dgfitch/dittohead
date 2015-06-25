@@ -79,7 +79,7 @@ def main():
     config = load_yaml("config.yaml")
     input = config["input_directory"]
 
-    # First, if there are any pending things in the directory, operate on them!
+    # First, if there are any pending things in the directory already, operate on them!
     # TODO
 
     # Using Watchdog: https://pypi.python.org/pypi/watchdog
