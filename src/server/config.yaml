@@ -1,3 +1,5 @@
 subprocess_user_name: "dittohead-worker"
-input_directory: "/home/fitch/dittohead-input"
+input_directory: "/home/dittohead/inbox"
+processing_directory: "/home/dittohead/processing"
+done_directory: "/home/dittohead/done"
 

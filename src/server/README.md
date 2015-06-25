@@ -26,16 +26,16 @@ Uses:
 
 ### Watcher location
 
-    /.../dittohead (dittohead:dittohead)
-      /inbox (mode 3777)
-        /.foo-{id} (copied in by user, so ends up user:user-grp mode 700)
+    /.../dittohead (dittohead:dittohead, 755)
+      /inbox (mode 3773?)
+        /.foo-{id} (copied in by user, so ends up user:dittohead)
           /eprime
           /biopac
           .
           .
           .
       /processing (mode 700)
-      /done (mode 7000)
+      /done (mode 700)
 
 ### Final location
 
@@ -43,14 +43,13 @@ Everything is the same as it was for raw-data, so it can be locked down separate
 
     /study
       /foo (foo:foo-grp 775 +s)
-        /raw-data (mri:foo-raw-data 750 +s)
-        /raw-dittohead (dittohead:foo-dittohead 750 +s)
+        /raw-data (mri:foo-raw-data 3750)
+        /raw-dittohead (dittohead:foo-grp 3750)
           /eprime
           /biopac
           .
           .
           .
-          /eyetracker
 
 
 ### Permissions

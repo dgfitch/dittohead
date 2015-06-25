@@ -42,11 +42,15 @@ input_directory = sys.argv[1]
 log.info("Initializing for directory {0}".format(input_directory))
 
 config = load_yaml("config.yaml")
-p = pwd.getpwnam(config['subprocess_user_name'])
-os.setgid(p.pw_uid)
-os.setuid(p.pw_gid)
+# Do we need to run as a different user? MAYBE NOT!
+#p = pwd.getpwnam(config['subprocess_user_name'])
+#os.setgid(p.pw_uid)
+#os.setuid(p.pw_gid)
 
 log.info("Working on directory {0} using uid {1} and gid {2}".format(input_directory, p.pw_uid, p.pw_gid))
 
 
 #### NOW STUFF HAPPENS
+
+os.rename()
+
