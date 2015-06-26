@@ -37,7 +37,7 @@ def configure_logging(log_directory):
     log = logging.getLogger('dittohead-worker')
     log.setLevel(logging.DEBUG)
     # create file handler which logs debug messages
-    fh = logging.FileHandler("{0}/dittohead-worker-{1}-{2}.log".format(log_directory, os.getpid(), datetime.datetime.now().replace(" ", "_")))
+    fh = logging.FileHandler("{0}/dittohead-worker-{1}-{2}.log".format(log_directory, os.getpid(), str(datetime.datetime.now()).replace(" ", "_")))
     fh.setLevel(logging.DEBUG)
     # create console handler with a less-verbose log level
     ch = logging.StreamHandler()
