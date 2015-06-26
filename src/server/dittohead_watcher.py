@@ -82,7 +82,7 @@ class DittoheadWatcher(FileSystemEventHandler):
             # and its new name does not start with a period,
             # we should operate on it
             if self.path_is_period(event.src_path) and not self.path_is_period(event.dest_path):
-                self.log.info("Got moved directory, firing watcher: {0}".format(event))
+                self.log.info("Got moved directory, firing worker: {0}".format(event))
                 operate(event.dest_path)
 
 

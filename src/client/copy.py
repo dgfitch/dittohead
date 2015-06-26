@@ -3,6 +3,7 @@ import os
 import posixpath
 import platform
 import logging
+import datetime
 
 
 # We mirror the paramiko exception up to the UI so it doesn't have to know anything about paramiko
