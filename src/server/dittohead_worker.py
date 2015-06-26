@@ -58,7 +58,7 @@ log.info("Working on directory {0}, using processing location {1} and study loca
 
 
 # We move it into processing
-os.move(input_directory, processing_location)
+os.rename(input_directory, processing_location)
 
 
 # From there we copy the files to the study directory
@@ -73,7 +73,7 @@ log.info("Done processing location {0} to study location {1}, leaving in {2}".fo
 
 
 # Success! We move it into done
-os.move(processing_location, done_location)
+os.rename(processing_location, done_location)
 
 # TODO: Email notification of the original user somehow
 
