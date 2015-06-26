@@ -62,7 +62,8 @@ os.move(input_directory, processing_location)
 
 
 # From there we copy the files to the study directory
-# TODO: figure out some way to use rsync to ensure no filename collisions?
+# TODO: figure out some way to use rsync to ensure no filename collisions and no changing existing files?
+# TODO: Should we track these collisions and include them in a notification email?
 rsync_command = "rsync -avzBupOMGLOLZ {0} {1}".format(processing_location, study_location)
 log.info("Running rsync: " + rsync_command)
 #os.system(rsync_command)
@@ -70,6 +71,9 @@ log.info("Running rsync: " + rsync_command)
 
 log.info("Done processing location {0} to study location {1}, leaving in {2}".format(processing_location, study_location, done_location))
 
+
 # Success! We move it into done
 os.move(processing_location, done_location)
+
+# TODO: Email notification of the original user somehow
 

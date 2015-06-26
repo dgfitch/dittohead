@@ -41,6 +41,11 @@ def configure_logging():
     return log
 
 
+def operate(self, directory):
+    subprocess.Popen(
+        ["python", "dittohead_worker.py", directory]
+    )
+
 
 class DittoheadWatcher(FileSystemEventHandler):
     def __init__(self, config, *args, **kwargs):
@@ -67,25 +72,24 @@ class DittoheadWatcher(FileSystemEventHandler):
             # we should operate on it
             if self.path_is_period(event.src_path) and not self.path_is_period(event.dest_path):
                 self.log.info("Got moved directory, firing watcher: {0}".format(event))
-                self.operate(event.dest_path)
+                operate(event.dest_path)
 
-    def operate(self, directory):
-        process = subprocess.Popen(
-            ["python", "dittohead_worker.py", directory]
-        )
 
 
 def main():
     config = load_yaml("config.yaml")
-    input = config["input_directory"]
+    input_dir = config["input_directory"]
 
     # First, if there are any pending things in the directory already, operate on them!
-    # TODO
+    for f in os.listdir(input_dir):
+        path = os.path.join(input_dir, f)
+        if os.path.isdir(path):
+            operate(path)
 
-    # Using Watchdog: https://pypi.python.org/pypi/watchdog
+    # Now, watch the input directory using Watchdog
     observer = Observer()
     watcher = DittoheadWatcher(config)
-    observer.schedule(watcher, input)
+    observer.schedule(watcher, input_dir)
     observer.start()
     try:
         while True:
