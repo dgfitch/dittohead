@@ -57,7 +57,7 @@ def copy_files(window_owner, user, password, files, study, remotehost="guero"):
         ssh.connect(remotehost, username=user, password=password)
 
         ftp = ssh.open_sftp()
-        final_folder_name = "{0}-tmp".format(study['name'])
+        final_folder_name = "{0}-{1}".format(study['name'], str(datetime.datetime.now()).replace(" ", "_"))
         final_folder_path = "{0}/{1}".format(study['remote_directory'], final_folder_name)
         upload_folder_name = "." + final_folder_name
         upload_folder_path = "{0}/{1}".format(study['remote_directory'], upload_folder_name)
