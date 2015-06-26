@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+"""
+Dittohead watcher daemon.
+
+Uses watchdog to watch a given "inbox" input directory where files are landing
+from the dittohead clients.
+
+Does not do anything until a `.directory` is renamed to `directory` without a dot.
+
+Then it makes a thread for a `dittohead_worker.py` to operate on that directory.
+"""
+
 import os
 import logging
 import yaml
@@ -19,13 +30,12 @@ def load_yaml(filename):
     else:
         return {}
 
-def configure_logging():
+def configure_logging(log_directory):
     # From the logging cookbook: https://docs.python.org/2/howto/logging-cookbook.html#logging-cookbook
     log = logging.getLogger('dittohead-watcher')
     log.setLevel(logging.DEBUG)
     # create file handler which logs debug messages
-    # TODO: This should probably be stored somewhere smarter
-    fh = logging.FileHandler('dittohead-watcher.log')
+    fh = logging.FileHandler('{0}/dittohead-watcher.log'.format(log_directory))
     fh.setLevel(logging.DEBUG)
     # create console handler with a less-verbose log level
     ch = logging.StreamHandler()
@@ -42,6 +52,7 @@ def configure_logging():
 
 
 def operate(directory):
+    # TODO: Is this the right way to do multithreaded? I have no idea
     subprocess.Popen(
         ["python", "dittohead_worker.py", directory]
     )
@@ -50,7 +61,7 @@ def operate(directory):
 class DittoheadWatcher(FileSystemEventHandler):
     def __init__(self, config, *args, **kwargs):
         super(DittoheadWatcher, self).__init__(*args, **kwargs)
-        self.log = configure_logging()
+        self.log = configure_logging(config["log_directory"])
         self.config = config
 
     def path_is_period(self, path):

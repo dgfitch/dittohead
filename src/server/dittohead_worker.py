@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+Dittohead worker process.
+
+Given an input directory and settings from `config.yaml`, does:
+
+- Copy to `processing_directory`
+- Process by copying files into `study_directory`
+  (using the study name in the uploaded folder and putting them
+   inside a folder there named for `study_dittohead_raw_folder_name`)
+- TODO: Notification
+- Move folder from `processing_directory` to `done_directory`
+"""
+
 import os
 import sys
 import pwd
@@ -16,13 +29,15 @@ def load_yaml(filename):
     else:
         return {}
 
-def configure_logging():
+def configure_logging(log_directory):
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory)
+
     # From the logging cookbook: https://docs.python.org/2/howto/logging-cookbook.html#logging-cookbook
     log = logging.getLogger('dittohead-worker')
     log.setLevel(logging.DEBUG)
     # create file handler which logs debug messages
-    # TODO: This should probably be stored somewhere smarter
-    fh = logging.FileHandler("dittohead-worker-{0}-{1}.log".format(os.getpid(), datetime.datetime.now()))
+    fh = logging.FileHandler("{0}/dittohead-worker-{1}-{2}.log".format(log_directory, os.getpid(), datetime.datetime.now().replace(" ", "_")))
     fh.setLevel(logging.DEBUG)
     # create console handler with a less-verbose log level
     ch = logging.StreamHandler()
@@ -37,15 +52,14 @@ def configure_logging():
     return log
 
 
-log = configure_logging()
+config = load_yaml("config.yaml")
+log = configure_logging(config["log_directory"])
 input_directory = sys.argv[1]
 
 log.info("Initializing worker for directory {0}".format(input_directory))
 
 
 # NOW STUFF HAPPENS
-
-config = load_yaml("config.yaml")
 
 folder_name = os.path.basename(input_directory)
 study_name = folder_name.split("-")[0]
