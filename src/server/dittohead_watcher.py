@@ -41,7 +41,7 @@ def configure_logging():
     return log
 
 
-def operate(self, directory):
+def operate(directory):
     subprocess.Popen(
         ["python", "dittohead_worker.py", directory]
     )
