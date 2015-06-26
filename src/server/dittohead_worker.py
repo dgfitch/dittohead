@@ -50,9 +50,9 @@ config = load_yaml("config.yaml")
 folder_name = os.path.basename(input_directory)
 study_name = folder_name.split("-")[0]
 
-study_location = os.join(config["study_directory"], study_name, config["study_dittohead_raw_folder_name"])
-processing_location = os.join(config["processing_directory"], folder_name)
-done_location = os.join(config["done_directory"], folder_name)
+study_location = os.path.join(config["study_directory"], study_name, config["study_dittohead_raw_folder_name"])
+processing_location = os.path.join(config["processing_directory"], folder_name)
+done_location = os.path.join(config["done_directory"], folder_name)
 
 log.info("Working on directory {0}, using processing location {1} and study location {2}".format(input_directory, processing_location, study_location))
 
