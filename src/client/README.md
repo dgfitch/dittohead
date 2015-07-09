@@ -12,7 +12,6 @@ Uses:
 ## TODO
 
 - Make the stupid `copy_gauge` size right when it shows up
-- Nice native browse box to select local directory for studies
 
 
 ## Packaging

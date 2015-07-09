@@ -47,8 +47,9 @@ class StudyFrame(DittoheadFrame):
         l4 = wx.StaticText(self.panel, -1, 'Remote Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.text_extra_contacts = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
-        self.text_local_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
+        self.local_directory = wx.DirPickerCtrl(self.panel, wx.ID_ANY, wx.EmptyString, u"Select a folder", wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE)
         self.text_remote_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
+ 
         b1 = wx.Button(self.panel, wx.NewId(), '&OK', (-1, -1), wx.DefaultSize)
         b2 = wx.Button(self.panel, wx.NewId(), '&Cancel', (-1, -1), wx.DefaultSize)
         staline = wx.StaticLine(self.panel, wx.NewId(), (-1, -1), (-1, 2), wx.LI_HORIZONTAL)
@@ -72,7 +73,7 @@ class StudyFrame(DittoheadFrame):
 
         hsizer3 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer3.Add(l3, 0, wx.RIGHT, b)
-        hsizer3.Add(self.text_local_directory, 1, wx.GROW, b)
+        hsizer3.Add(self.local_directory, 1, wx.GROW, b)
         hsizer3.SetItemMinSize(l3, (w, -1))
 
         hsizer4 = wx.BoxSizer(wx.HORIZONTAL)
@@ -112,7 +113,7 @@ class StudyFrame(DittoheadFrame):
         
         self.text_name.SetValue(s["name"])
         if "extra_contacts" in s: self.text_extra_contacts.SetValue(s["extra_contacts"])
-        if "local_directory" in s: self.text_local_directory.SetValue(s["local_directory"])
+        if "local_directory" in s: self.local_directory.SetPath(s["local_directory"])
         if "remote_directory" in s: self.text_remote_directory.SetValue(s["remote_directory"])
         
 
