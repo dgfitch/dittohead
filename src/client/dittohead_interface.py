@@ -3,6 +3,8 @@ import gettext
 import os.path
 import sys, traceback
 from datetime import *
+from threading import *
+import time
 
 from copy import copy_files, AuthenticationException
 
@@ -14,6 +16,85 @@ ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 """
 
 FONT_SIZE = (8,20)
+
+
+# Long-running worker thread stuff borrowed from http://wiki.wxpython.org/LongRunningTasks
+
+EVT_RESULT_ID = wx.NewId()
+EVT_PROGRESS_ID = wx.NewId()
+
+def EVT_RESULT(win, func):
+    """Define Result Event."""
+    win.Connect(-1, -1, EVT_RESULT_ID, func)
+
+def EVT_PROGRESS(win, func):
+    """Define Progress Event."""
+    win.Connect(-1, -1, EVT_PROGRESS_ID, func)
+
+
+class ResultEvent(wx.PyEvent):
+    """Simple event to carry arbitrary result data."""
+    def __init__(self, data):
+        wx.PyEvent.__init__(self)
+        self.SetEventType(EVT_RESULT_ID)
+        self.data = data
+
+class ProgressEvent(wx.PyEvent):
+    """Simple event to carry progress data, like index of file and local path we're at so far"""
+    def __init__(self, number, path):
+        wx.PyEvent.__init__(self)
+        self.SetEventType(EVT_PROGRESS_ID)
+        self.number = number
+        self.path = path
+
+
+class WorkerThread(Thread):
+    def __init__(self, notify_window):
+        Thread.__init__(self)
+        self._handler = notify_window.GetEventHandler()
+        self._want_abort = False
+
+    def run(self):
+        """
+        # Here's a way to test progress and cancelling easily without doing actual SSH somewhere:
+        for i in range(1,100):
+            wx.PostEvent(self._handler, ProgressEvent(i, "TESTING"))
+            time.sleep(1.0)
+            if self._want_abort:
+                wx.PostEvent(self._handler, ResultEvent(None))
+                return
+        """
+
+        try:
+            copy_files(
+                thread=self,
+                user=self.username,
+                password=self.password, 
+                files=self.files,
+                study=self.study,
+            )
+
+            if self._want_abort:
+                wx.PostEvent(self._handler, ResultEvent(None))
+                return
+
+        except AuthenticationException:
+            wx.PostEvent(self._handler, ResultEvent(False))
+            return
+
+        wx.PostEvent(self._handler, ResultEvent(True))
+
+    def progress(self, index, path):
+        wx.PostEvent(self._handler, ProgressEvent(index, path))
+
+
+    def should_abort(self):
+        return self._want_abort
+
+    def abort(self):
+        self._want_abort = True
+
+
 
 class DittoheadFrame(wx.Frame):
     """
@@ -32,6 +113,9 @@ class DittoheadFrame(wx.Frame):
 
 
 class StudyFrame(DittoheadFrame):
+    """
+    The frame for editing study file locations and metadata.
+    """
     def __init__(self, *args, **kwds):
         DittoheadFrame.__init__(self, *args, **kwds)
 
@@ -148,16 +232,20 @@ class StudyFrame(DittoheadFrame):
         self.Destroy()
 
     def CancelClick(self, event):
-        self.Destroy()
+        if self.worker:
+            log.info("Firing abort!")
+            self.worker.abort()
+        else:
+            log.info("Destroying window!")
+            self.Destroy()
 
 
 class CopyFrame(DittoheadFrame):
+    """
+    The main window for selecting stuff and copying things
+    """
     def __init__(self, *args, **kwds):
         DittoheadFrame.__init__(self, *args, **kwds)
-
-        self.selected_study = None
-        self.last_refreshed_files = None
-        self.files = []
 
         self.panel = wx.Panel(self, wx.ID_ANY)
 
@@ -186,6 +274,26 @@ class CopyFrame(DittoheadFrame):
         self.__do_layout()
         # end wxGlade
 
+        # Some parts of the UI should be hidden before the copy.
+        # If I hide them, they don't get a reserved space in the layout.
+        # So this is unnecessarily ugly because I don't understand wxPython.
+        self.copy_status.SetLabel("")
+
+        self.selected_study = None
+        self.last_refreshed_files = None
+        self.files = []
+
+
+        # Set up event handler for any worker thread results
+        EVT_RESULT(self,self.OnResult)
+
+        # Set up event handler for any worker thread progress
+        EVT_PROGRESS(self,self.OnProgress)
+
+        # And indicate we don't have a worker thread yet
+        self.worker = None
+
+
 
     def __set_properties(self):
         # begin wxGlade: CopyFrame.__set_properties
@@ -194,8 +302,6 @@ class CopyFrame(DittoheadFrame):
         self.copy_button.Enable(False)
         self.copy_button.SetDefault()
 
-        self.copy_status.Hide()
-        self.copy_gauge.Hide()
         # end wxGlade
 
     def __bind_events(self):
@@ -227,16 +333,17 @@ class CopyFrame(DittoheadFrame):
         left_pane.Add(self.list_studies, 1, wx.EXPAND | wx.ALL, 0)
 
         right_pane = wx.BoxSizer(wx.VERTICAL)
+
         right_pane.Add(self.label_username, 0, wx.EXPAND)
         right_pane.Add(self.combo_username, 0, wx.EXPAND)
         right_pane.Add(self.label_password, 0, wx.EXPAND)
         right_pane.Add(self.text_password, 0, wx.EXPAND)
         right_pane.Add(self.label_preview, 0, wx.EXPAND)
 
-        right_pane.Add(self.copy_status, 0, wx.EXPAND)
-        right_pane.Add(self.copy_gauge, 0, wx.EXPAND)
-
         right_pane.Add(self.text_preview, 1, wx.EXPAND | wx.ALL, 0)
+
+        right_pane.Add(self.copy_status, 0, wx.EXPAND, 0)
+        right_pane.Add(self.copy_gauge, 0, wx.EXPAND, 0)
         
         hgap, vgap = 0, 0
         nrows, ncols = 2, 2
@@ -393,7 +500,7 @@ class CopyFrame(DittoheadFrame):
 
                 # Iterate over local directory looking for things > last_time
 
-                wait = wx.BusyCursor()
+                self.wait = wx.BusyCursor()
 
                 for root, dirs, files in os.walk(walk_path):
                     for name in files:
@@ -411,7 +518,7 @@ class CopyFrame(DittoheadFrame):
                         dirs.remove('.git')
 
 
-                del wait
+                del self.wait
 
                 self.files = result
                 return result
@@ -420,22 +527,15 @@ class CopyFrame(DittoheadFrame):
 
 
     def PrepareUIForCopying(self, files):
-        self.copy_status.Show()
-        self.copy_gauge.Show()
+        self.copy_gauge.SetRange(len(files))
         self.copy_button.Hide()
         self.Layout()
 
     def PrepareUIDoneWithCopying(self):
-        self.copy_status.Hide()
-        self.copy_gauge.Hide()
+        self.copy_status.SetLabel("Done!")
         self.copy_button.Show()
         self.Layout()
 
-    def CopyingFile(self, num, total, local_path):
-        self.copy_gauge.SetRange(total)
-        self.copy_gauge.SetValue(num)
-        self.copy_status.SetLabel("Copying " + local_path)
-        self.Layout()
         
 
     def MacReopenApp(self):
@@ -481,40 +581,63 @@ class CopyFrame(DittoheadFrame):
                 h.pop(k, None)
             return h
 
-        files = map(remove_keys, files)
+        # We need to store this stuff for the result handler to use
+        self.files = map(remove_keys, files)
+        self.study_name = study_name
+        self.study = study
+        self.username = username
 
         self.PrepareUIForCopying(files)
+        self.wait = wx.BusyCursor()
+        self.worker = WorkerThread(self)
 
-        try:
-            copy_files(
-                window_owner=self,
-                user=username,
-                password=password, 
-                files=files,
-                study=study,
-            )
-        except AuthenticationException:
-            self.showWarningDialog("Authentication failed for user {0}. Did you mistype your password?".format(username))
-            self.PrepareUIDoneWithCopying()
-            return
+        # We also need to pass the stuff into the worker thread state. 
+        # Kind of ugly, probably a better way; I couldn't find one.
+        self.worker.files = self.files
+        self.worker.username = self.username
+        self.worker.password = password
+        self.worker.study = study
+        self.worker.start()
 
 
+
+
+    def OnProgress(self, event):
+        self.copy_gauge.SetValue(event.number)
+        self.copy_status.SetLabel("Copying " + event.path)
+        #self.Layout()
+
+
+    def OnResult(self, event):
         self.PrepareUIDoneWithCopying()
 
-        # Reorder self.last_users or add a new entry if needed
-        if study_name not in self.last_users:
-            self.last_users[study_name] = []
+        if event.data is None:
+            self.worker = None
+            dlg = wx.MessageDialog(self, "Copy cancelled", "Copy cancelled", wx.OK | wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
 
-        last = self.last_users[study_name]
-        if username in last:
-            last.remove(username)
-        last.insert(0, username)
+        elif event.data is False:
+            self.showWarningDialog("Authentication failed for user {0}. Did you mistype your password?".format(username))
 
-        study["last_time"] = self.last_refreshed_files
+        elif event.data is True:
+            # Reorder self.last_users or add a new entry if needed
+            if self.study_name not in self.last_users:
+                self.last_users[self.study_name] = []
 
-        dlg = wx.MessageDialog(self, "{0} files were copied.".format(len(files)), "Copy successful", wx.OK | wx.ICON_INFORMATION)
-        dlg.ShowModal()
-        dlg.Destroy()
+            last = self.last_users[self.study_name]
+            if self.username in last:
+                last.remove(self.username)
+            last.insert(0, self.username)
 
-        self.Destroy()
+            self.study["last_time"] = self.last_refreshed_files
+
+            del self.wait
+
+            dlg = wx.MessageDialog(self, "{0} files were copied.".format(len(self.files)), "Copy successful", wx.OK | wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+
+            self.Destroy()
+
 

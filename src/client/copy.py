@@ -1,3 +1,4 @@
+import wx
 import paramiko
 import os
 import posixpath
@@ -6,9 +7,12 @@ import logging
 import datetime
 
 
+
 # We mirror the paramiko exception up to the UI so it doesn't have to know anything about paramiko
 class AuthenticationException(Exception):
     pass
+
+
 
 # These extensions to paramiko are required to recursively copy a directory
 # Taken from http://stackoverflow.com/questions/4409502/directory-transfers-on-paramiko
@@ -35,7 +39,7 @@ def mkdir(ftp, path, mode=511, ignore_existing=False):
             raise
 
 
-def copy_files(window_owner, user, password, files, study, remotehost="guero"):
+def copy_files(thread, user, password, files, study, remotehost="guero"):
     """
     User and password are unencrypted in memory.
     Probably not great.
@@ -77,16 +81,19 @@ def copy_files(window_owner, user, password, files, study, remotehost="guero"):
             full_remote_folder = posixpath.dirname(full_remote_path)
             mkdir(ftp, full_remote_folder, ignore_existing=True)
 
-            window_owner.CopyingFile(index, len(files), local_path)
-            # TODO: This supports a callback that sends bytes/total bytes, surface to UI?
+            thread.progress(index, local_path)
+            # TODO: This supports a callback that sends bytes/total bytes, surface to UI as well someday?
             ftp.put(local_path, upload_folder_path + "/" + remote_path)
             index += 1
+            if thread.should_abort():
+                break
 
         ftp.close()
 
-        mv = "mv '{0}' '{1}'".format(upload_folder_path, final_folder_path)
-        log.debug("Running " + mv)
-        ssh.exec_command(mv)
+        if not thread.should_abort():
+            mv = "mv '{0}' '{1}'".format(upload_folder_path, final_folder_path)
+            log.debug("Running " + mv)
+            ssh.exec_command(mv)
 
         ssh.close()
         

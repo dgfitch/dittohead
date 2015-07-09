@@ -11,7 +11,7 @@ Uses:
 
 ## TODO
 
-- Make the stupid `copy_gauge` size right when it shows up
+- Make clicking cancel not crash the entire program
 
 
 ## Packaging
