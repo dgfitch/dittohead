@@ -11,17 +11,13 @@ Uses:
 
 ## TODO
 
-- Should we clean up on user cancel, or leave the files on the server?
-- Do we care that "new" files with colliding names get the name, and the 
-  original gets a "~" suffix (if we just use rsync as planned)
-- Do we care that "new" files with old timestamps will get ignored in the current scheme?
-- Actually use extra contact emails from study metadata so that people who want emails can get notified?
-- Should we try to keep mtime equivalent to the source so multiple uploads work normally? Multiple uploading is actually not easy for a user to manage anyway, because we track timestamps per-study...
+- We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
+- We don't use the extra contact emails from study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
 
 
 ## Testing help
 
-- Like touch in unix for powershell, to force files to latest: `ls | foreach { $_.LastWriteTime = date }`
+- If you want to set file mtime to "now" on windows, like touch in unix, do this in powershell: `ls | foreach { $_.LastWriteTime = date }`
 
 
 ## Packaging
