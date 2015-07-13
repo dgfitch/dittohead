@@ -75,12 +75,25 @@ log.info("Working on directory {0}, using processing location {1} and study loca
 os.rename(input_directory, processing_location)
 
 
-# From there we copy the files to the study directory
-# TODO: figure out some way to use rsync to ensure no filename collisions and no changing existing files?
-# TODO: Should we track these collisions and include them in a notification email?
-rsync_command = "rsync -avzBupOMGLOLZ {0} {1}".format(processing_location, study_location)
-log.info("Running rsync: " + rsync_command)
-#os.system(rsync_command)
+# From there we copy the files to the study directory using rsync
+# -v: verbose
+# -b: backup, which adds a tilde to things that already exist
+# -r: recursive
+# -t: preserve modification times
+# -p: preserve permissions
+# -l: preserve symlinks
+# -z: compress
+
+rsync_args = [
+    "rsync",
+    "-vbrtplz",
+    "--chmod=Du+rwx,Dg+rwx,Do+rx,Do-w,Fu+rw,Fu-x,Fg+rw,Fg-x,Fo+r,Fo-wx",
+    processing_location,
+    study_location,
+]
+
+log.info("Running rsync: " + rsync_args)
+subprocess.call(rsync_args)
 
 
 log.info("Done processing location {0} to study location {1}, leaving in {2}".format(processing_location, study_location, done_location))
@@ -89,5 +102,4 @@ log.info("Done processing location {0} to study location {1}, leaving in {2}".fo
 # Success! We move it into done
 os.rename(processing_location, done_location)
 
-# TODO: Email notification of the original user somehow
 

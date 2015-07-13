@@ -11,9 +11,10 @@ Uses:
 
 ## TODO
 
-- Actually use extra contact emails from study metadata so that people who want emails can get notified
 - Should we clean up on user cancel, or leave the files on the server?
 - Do we care that "new" files with old timestamps will get ignored in the current scheme?
+- Actually use extra contact emails from study metadata so that people who want emails can get notified?
+- Keep mtime so multiple uploads work normally? Multiple uploading is actually not easy because we track timestamps...
 
 
 ## Testing help
