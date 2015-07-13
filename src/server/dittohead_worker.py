@@ -19,6 +19,7 @@ import pwd
 import datetime
 import yaml
 import logging
+import subprocess
 
 def load_yaml(filename):
     if os.path.isfile(filename):
