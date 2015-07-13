@@ -55,7 +55,7 @@ def configure_logging(log_directory):
 
 config = load_yaml("config.yaml")
 log = configure_logging(config["log_directory"])
-input_directory = sys.argv[1]
+input_directory = sys.argv[0]
 
 log.info("Initializing worker for directory {0}".format(input_directory))
 
@@ -89,7 +89,7 @@ rsync_args = [
     "rsync",
     "-vbrtplz",
     "--chmod=Du+rwx,Dg+rwx,Do+rx,Do-w,Fu+rw,Fu-x,Fg+rw,Fg-x,Fo+r,Fo-wx",
-    processing_location,
+    processing_location + "/*",
     study_location,
 ]
 
