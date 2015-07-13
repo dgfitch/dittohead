@@ -92,7 +92,7 @@ rsync_args = [
     study_location,
 ]
 
-log.info("Running rsync: " + rsync_args)
+log.info("Running rsync: {0}".format(rsync_args))
 subprocess.call(rsync_args)
 
 
