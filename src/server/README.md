@@ -20,6 +20,7 @@ Uses:
 
 ## TODO
 
+- Finalize whatever the rsync "landing" logic is to assure no files get overwritten, renamed, or changed in any way
 - Pull out shared logging and yaml loading code between server/client, bleh
 - Make logs go someplace less stupid
 

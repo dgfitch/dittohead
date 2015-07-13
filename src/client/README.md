@@ -13,6 +13,12 @@ Uses:
 
 - Actually use extra contact emails from study metadata so that people who want emails can get notified
 - Should we clean up on user cancel, or leave the files on the server?
+- Do we care that "new" files with old timestamps will get ignored in the current scheme?
+
+
+## Testing help
+
+- Like touch in unix for powershell, to force files to latest: `ls | foreach { $_.LastWriteTime = date }`
 
 
 ## Packaging
