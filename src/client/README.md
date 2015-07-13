@@ -11,7 +11,8 @@ Uses:
 
 ## TODO
 
-- Make clicking cancel not crash the entire program
+- Actually use extra contact emails from study metadata so that people who want emails can get notified
+- Should we clean up on user cancel, or leave the files on the server?
 
 
 ## Packaging
@@ -24,7 +25,7 @@ Uses:
 
 ### OSX client
 
-1. Probably use a virtualenv, as outlined below.
+1. Get it running in a virtualenv first, as outlined below.
 2. `pip install py2app`
 3. Edit `VIRTUALENV/mac_dittohead/lib/python2.7/site-packages/py2app/recipes/virtualenv.py` 
    and change `load_module` to `_load_module` and `scan_code` to `_scan_code`.
