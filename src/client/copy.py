@@ -96,7 +96,10 @@ def copy_files(thread, user, password, files, study, remotehost="guero"):
             ssh.exec_command(mv)
 
         ssh.close()
+
+        log.info("Completed copy of %s files for %s to %s in study %s", len(files), user, remotehost, study['name'])
         
     except paramiko.ssh_exception.AuthenticationException:
+        log.info("Authentication exception by %s", user)
         raise AuthenticationException()
 

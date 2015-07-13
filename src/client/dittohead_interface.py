@@ -8,12 +8,6 @@ import time
 
 from copy import copy_files, AuthenticationException
 
-# Hack so icon works right on windows, see http://stackoverflow.com/questions/15223952/wxpython-icon-for-task-bar
-"""
-import ctypes
-myappid = 'mycompany.myproduct.subproduct.version' # arbitrary string
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-"""
 
 FONT_SIZE = (8,20)
 
@@ -232,12 +226,7 @@ class StudyFrame(DittoheadFrame):
         self.Destroy()
 
     def CancelClick(self, event):
-        if self.worker:
-            log.info("Firing abort!")
-            self.worker.abort()
-        else:
-            log.info("Destroying window!")
-            self.Destroy()
+        self.Destroy()
 
 
 class CopyFrame(DittoheadFrame):
@@ -395,7 +384,11 @@ class CopyFrame(DittoheadFrame):
 
     
     def CancelClick(self, event):
-        self.Destroy()
+        if self.worker:
+            self.log.info("Aborting copy")
+            self.worker.abort()
+        else:
+            self.Destroy()
 
     def EnableEditStudy(self):
         if self.selected_study:
@@ -532,7 +525,6 @@ class CopyFrame(DittoheadFrame):
         self.Layout()
 
     def PrepareUIDoneWithCopying(self):
-        self.copy_status.SetLabel("Done!")
         self.copy_button.Show()
         self.Layout()
 
@@ -574,20 +566,12 @@ class CopyFrame(DittoheadFrame):
             return
 
 
-        files = filter(lambda x: x["will_copy"], self.files)
-
-        def remove_keys(h):
-            for k in ["will_copy", "size"]:
-                h.pop(k, None)
-            return h
-
         # We need to store this stuff for the result handler to use
-        self.files = map(remove_keys, files)
         self.study_name = study_name
         self.study = study
         self.username = username
 
-        self.PrepareUIForCopying(files)
+        self.PrepareUIForCopying(self.files)
         self.wait = wx.BusyCursor()
         self.worker = WorkerThread(self)
 
@@ -600,27 +584,32 @@ class CopyFrame(DittoheadFrame):
         self.worker.start()
 
 
-
-
     def OnProgress(self, event):
         self.copy_gauge.SetValue(event.number)
         self.copy_status.SetLabel("Copying " + event.path)
-        #self.Layout()
 
 
     def OnResult(self, event):
         self.PrepareUIDoneWithCopying()
+        del self.wait
 
         if event.data is None:
             self.worker = None
+
+            self.copy_status.SetLabel("Copy cancelled")
+            self.copy_gauge.SetValue(0)
+
             dlg = wx.MessageDialog(self, "Copy cancelled", "Copy cancelled", wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
 
         elif event.data is False:
-            self.showWarningDialog("Authentication failed for user {0}. Did you mistype your password?".format(username))
+            self.copy_status.SetLabel("Authentication failed")
+            self.showWarningDialog("Authentication failed for user {0}. Did you mistype your password?".format(self.username))
 
         elif event.data is True:
+            self.copy_status.SetLabel("Copy complete!")
+
             # Reorder self.last_users or add a new entry if needed
             if self.study_name not in self.last_users:
                 self.last_users[self.study_name] = []
@@ -631,8 +620,6 @@ class CopyFrame(DittoheadFrame):
             last.insert(0, self.username)
 
             self.study["last_time"] = self.last_refreshed_files
-
-            del self.wait
 
             dlg = wx.MessageDialog(self, "{0} files were copied.".format(len(self.files)), "Copy successful", wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
