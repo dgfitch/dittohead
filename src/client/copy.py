@@ -14,20 +14,6 @@ class AuthenticationException(Exception):
 
 
 
-# These extensions to paramiko are required to recursively copy a directory
-# Taken from http://stackoverflow.com/questions/4409502/directory-transfers-on-paramiko
-def put_dir(ftp, source, target):
-    ''' Uploads the contents of the source directory to the target path. The
-        target directory needs to exist. All subdirectories in source are 
-        created under target.
-    '''
-    for item in os.listdir(source):
-        if os.path.isfile(os.path.join(source, item)):
-            ftp.put(os.path.join(source, item), '%s/%s' % (target, item))
-        else:
-            mkdir(ftp, '%s/%s' % (target, item), ignore_existing=True)
-            put_dir(ftp, os.path.join(source, item), '%s/%s' % (target, item))
-
 def mkdir(ftp, path, mode=511, ignore_existing=False):
     ''' Augments mkdir by adding an option to not fail if the folder exists  '''
     try:
@@ -82,8 +68,15 @@ def copy_files(thread, user, password, files, study, remotehost="guero"):
             mkdir(ftp, full_remote_folder, ignore_existing=True)
 
             thread.progress(index, local_path)
+            destination_path = upload_folder_path + "/" + remote_path
+
             # TODO: This supports a callback that sends bytes/total bytes, surface to UI as well someday?
-            ftp.put(local_path, upload_folder_path + "/" + remote_path)
+            ftp.put(local_path, destination_path)
+
+            mtime = os.path.getmtime(local_path)
+            # Here we update the atime and mtime on the server
+            ftp.utime(destination_path, (mtime, mtime))
+
             index += 1
             if thread.should_abort():
                 break
