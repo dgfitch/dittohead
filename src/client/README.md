@@ -11,6 +11,19 @@ Uses:
 
 ## TODO
 
+- Only display "Errors occurred" message if something higher than INFO 
+  happened
+- Kill cancel button, move copy to lower right
+- Autofill in username listbox if possible
+- Study editing:
+    - Remove extra contact emails
+    - Listbox of remembered logins per study, so they can be deleted
+    - Check study name is just letters and numbers
+- YAML should remove unicode garbage pile if possible
+- Use ls-like file display with columns for name, size, date
+- At copying, move from "TODO" to "DONE
+- Make "appears to have" text less awkward
+- Last ran at => format date better
 - We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
 - We don't use the extra contact emails in study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
 
