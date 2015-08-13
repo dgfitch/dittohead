@@ -48,8 +48,8 @@ Uses:
 
 ## TODO
 
-- Pull out and unify shared logging and yaml loading code between server/client? Worth the effort? Maybe not...
 - Make logs go someplace less stupid
+- Make code less ugly
 
 
 ## Watcher daemon

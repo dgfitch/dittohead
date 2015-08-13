@@ -12,12 +12,18 @@ Uses:
 ## TODO
 
 - We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
-- We don't use the extra contact emails from study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
+- We don't use the extra contact emails in study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
 
 
 ## Testing help
 
 - If you want to set file mtime to "now" on windows, like touch in unix, do this in powershell: `ls | foreach { $_.LastWriteTime = date }`
+- On windows, if running via EXE, it dumps a `dittohead.exe.log` in its current directory if there are warnings or errors.
+- The client loads and saves studies from `studies.yaml` in the current directory, and 
+  will try to create it if it doesn't exist.
+- The client loads and saves the last user for each study in `last_users.yaml` 
+  -- less important than `studies.yaml`, and hopefully kind of helpful per-machine 
+  for people who have been uploading frequently.
 
 
 ## Packaging

@@ -104,3 +104,6 @@ log.info("Done processing location {0} to study location {1}, leaving in {2}".fo
 os.rename(processing_location, done_location)
 
 
+# TODO: Email a person?
+
+

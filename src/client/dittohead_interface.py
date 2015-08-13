@@ -114,6 +114,7 @@ class StudyFrame(DittoheadFrame):
         DittoheadFrame.__init__(self, *args, **kwds)
 
         self.callback = None
+        self.original_name = None
 
         LABEL_WIDTH = 300
         TEXTBOX_WIDTH = 300
@@ -178,6 +179,8 @@ class StudyFrame(DittoheadFrame):
     def AddStudy(self, studies):
         self.isNew = True
         self.studies = studies
+        self.text_remote_directory.SetValue("/home/inbox/dittohead")
+
 
     def EditStudy(self, studies, name):
         self.isNew = False
@@ -199,7 +202,7 @@ class StudyFrame(DittoheadFrame):
         new_name = self.text_name.GetValue()
 
         if new_name == "":
-            raise Exception("Trying to save changes to a nonexistent study {0} in hash {1}".format(self.original_name, studies))
+            raise Exception("Trying to save changes to a nonexistent or blank study {0} in hash {1}".format(self.original_name, self.studies))
 
         if self.isNew:
             s = {}
@@ -218,7 +221,7 @@ class StudyFrame(DittoheadFrame):
 
         s["name"] = new_name
         s["extra_contacts"] = self.text_extra_contacts.GetValue()
-        s["local_directory"] = self.text_local_directory.GetValue()
+        s["local_directory"] = self.local_directory.GetPath()
         s["remote_directory"] = self.text_remote_directory.GetValue()
 
         if self.callback: self.callback()
@@ -286,7 +289,7 @@ class CopyFrame(DittoheadFrame):
 
     def __set_properties(self):
         # begin wxGlade: CopyFrame.__set_properties
-        self.SetTitle("dittohead")
+        self.SetTitle("dittohead - The Magic Secure File Copier!")
         self.edit_study_button.Enable(False)
         self.copy_button.Enable(False)
         self.copy_button.SetDefault()
@@ -487,7 +490,7 @@ class CopyFrame(DittoheadFrame):
 
                 result = []
 
-                walk_path = s["local_directory"]
+                walk_path = s.get("local_directory") or ""
                 if not os.path.isdir(walk_path):
                     return []
 
