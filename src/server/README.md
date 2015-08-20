@@ -49,8 +49,6 @@ Uses:
 ## TODO
 
 - Fix rsync path so it works right
-- Ensure directories get g+s
-- Check study name is just letters and numbers
 - Make logs go someplace less stupid
 - Make code less ugly
 

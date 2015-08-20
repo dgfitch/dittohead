@@ -20,6 +20,7 @@ import datetime
 import yaml
 import logging
 import subprocess
+import re
 
 def load_yaml(filename):
     if os.path.isfile(filename):
@@ -65,6 +66,12 @@ log.info("Initializing worker for directory {0}".format(input_directory))
 folder_name = os.path.basename(input_directory)
 study_name = folder_name.split("-")[0]
 
+# Check that study name is sane
+sane_name_pattern = re.compile("^([\w\d])+$")
+if not sane_name_pattern.match(study_name):
+    raise Exception("Insane study name prefix detected on input directory: {0}".format(input_directory))
+
+
 study_location = os.path.join(config["study_directory"], study_name, config["study_dittohead_raw_folder_name"])
 processing_location = os.path.join(config["processing_directory"], folder_name)
 done_location = os.path.join(config["done_directory"], folder_name)
@@ -88,9 +95,9 @@ os.rename(input_directory, processing_location)
 rsync_args = [
     "rsync",
     "-vbrtplz",
-    "--chmod=Du+rwx,Dg+rwx,Do+rx,Do-w,Fu+rw,Fu-x,Fg+rw,Fg-x,Fo+r,Fo-wx",
+    "--chmod=Du+rwx,Dg+rwsx,Do+rx,Do-w,Fu+rw,Fu-x,Fg+rw,Fg-x,Fo+r,Fo-wx",
     processing_location + "/*",
-    study_location,
+    study_location + "/",
 ]
 
 log.info("Running rsync: {0}".format(rsync_args))
