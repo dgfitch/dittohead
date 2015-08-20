@@ -67,7 +67,7 @@ folder_name = os.path.basename(input_directory)
 study_name = folder_name.split("-")[0]
 
 # Check that study name is sane
-sane_name_pattern = re.compile("^([\w\d])+$")
+sane_name_pattern = re.compile("^[\w\d]+$")
 if not sane_name_pattern.match(study_name):
     raise Exception("Insane study name prefix detected on input directory: {0}".format(input_directory))
 

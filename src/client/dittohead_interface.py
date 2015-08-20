@@ -5,11 +5,15 @@ import sys, traceback
 from datetime import *
 from threading import *
 import time
+import re
 
 from copy import copy_files, AuthenticationException
 
 
+# Default increased font size for things
 FONT_SIZE = (8,20)
+# A regex that study names must match
+SANE_NAME_PATTERN = re.compile("^[\w\d]+$")
 
 
 # Long-running worker thread stuff borrowed from http://wiki.wxpython.org/LongRunningTasks
@@ -121,11 +125,9 @@ class StudyFrame(DittoheadFrame):
 
         self.panel = wx.Panel(self, wx.ID_ANY)
         l1 = wx.StaticText(self.panel, -1, 'Study Name:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l2 = wx.StaticText(self.panel, -1, 'Extra Contact Emails (use commas):', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l3 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l4 = wx.StaticText(self.panel, -1, 'Remote Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
-        self.text_extra_contacts = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.local_directory = wx.DirPickerCtrl(self.panel, wx.ID_ANY, wx.EmptyString, u"Select a folder", wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE)
         self.text_remote_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
  
@@ -145,11 +147,6 @@ class StudyFrame(DittoheadFrame):
         hsizer1.Add(self.text_name, 1, wx.GROW, b)
         hsizer1.SetItemMinSize(l1, (w, -1))
 
-        hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer2.Add(l2, 0, wx.RIGHT, b)
-        hsizer2.Add(self.text_extra_contacts, 1, wx.GROW, b)
-        hsizer2.SetItemMinSize(l2, (w, -1))
-
         hsizer3 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer3.Add(l3, 0, wx.RIGHT, b)
         hsizer3.Add(self.local_directory, 1, wx.GROW, b)
@@ -164,10 +161,9 @@ class StudyFrame(DittoheadFrame):
         hsizerLast.Add(b1, 0)
         hsizerLast.Add(b2, 0, wx.LEFT, 10)
 
-        b = 6
+        b = 5
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1, 0, wx.EXPAND | wx.ALL, b)
-        vsizer1.Add(hsizer2, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer3, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer4, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(staline, 0, wx.GROW | wx.ALL, b)
@@ -193,7 +189,6 @@ class StudyFrame(DittoheadFrame):
             raise Exception("Trying to edit a nonexistent study {0} in hash {1}".format(name, studies))
         
         self.text_name.SetValue(s["name"])
-        if "extra_contacts" in s: self.text_extra_contacts.SetValue(s["extra_contacts"])
         if "local_directory" in s: self.local_directory.SetPath(s["local_directory"])
         if "remote_directory" in s: self.text_remote_directory.SetValue(s["remote_directory"])
         
@@ -203,6 +198,12 @@ class StudyFrame(DittoheadFrame):
 
         if new_name == "":
             raise Exception("Trying to save changes to a nonexistent or blank study {0} in hash {1}".format(self.original_name, self.studies))
+
+        if not SANE_NAME_PATTERN.match(new_name):
+            dlg = wx.MessageDialog(self, "Your study name must be all alphanumeric characters.", "Study name issue", wx.OK | wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
 
         if self.isNew:
             s = {}
@@ -220,7 +221,6 @@ class StudyFrame(DittoheadFrame):
                 raise Exception("Trying to save changes to a nonexistent study {0} in hash {1}".format(self.original_name, studies))
 
         s["name"] = new_name
-        s["extra_contacts"] = self.text_extra_contacts.GetValue()
         s["local_directory"] = self.local_directory.GetPath()
         s["remote_directory"] = self.text_remote_directory.GetValue()
 
@@ -250,7 +250,6 @@ class CopyFrame(DittoheadFrame):
         self.text_password = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_PASSWORD)
 
         self.copy_button = wx.Button(self.panel, wx.ID_ANY, "Copy")
-        self.cancel_button = wx.Button(self.panel, wx.ID_ANY, "Cancel")
 
         self.edit_study_button = wx.Button(self.panel, wx.ID_ANY, "Edit Study")
         self.add_study_button = wx.Button(self.panel, wx.ID_ANY, "Add Study")
@@ -297,7 +296,6 @@ class CopyFrame(DittoheadFrame):
         # end wxGlade
 
     def __bind_events(self):
-        self.Bind(wx.EVT_BUTTON, self.CancelClick, self.cancel_button)
         self.Bind(wx.EVT_BUTTON, self.CopyClick, self.copy_button)
 
         self.Bind(wx.EVT_BUTTON, self.EditStudyClick, self.edit_study_button)
@@ -311,9 +309,8 @@ class CopyFrame(DittoheadFrame):
     def __do_layout(self):
         # begin wxGlade: CopyFrame.__do_layout
         action_buttons = wx.BoxSizer(wx.HORIZONTAL)
-        action_buttons.Add(self.copy_button, 0, wx.ALL, 0)
         action_buttons.Add((-1, -1), 1)
-        action_buttons.Add(self.cancel_button, 0, wx.ALL, 0)
+        action_buttons.Add(self.copy_button, 0, wx.ALL, 0)
 
         study_buttons = wx.BoxSizer(wx.HORIZONTAL)
         study_buttons.Add(self.edit_study_button, 0, wx.ALL, 0)
@@ -386,13 +383,6 @@ class CopyFrame(DittoheadFrame):
             self.list_studies.Append(s["name"])
 
     
-    def CancelClick(self, event):
-        if self.worker:
-            self.log.info("Aborting copy")
-            self.worker.abort()
-        else:
-            self.Destroy()
-
     def EnableEditStudy(self):
         if self.selected_study:
             self.edit_study_button.Enable(True)

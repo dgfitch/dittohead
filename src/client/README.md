@@ -11,14 +11,10 @@ Uses:
 
 ## TODO
 
-- Only display "Errors occurred" message if something higher than INFO 
-  happened
-- Kill cancel button, move copy to lower right
+- Only display "Errors occurred" message if something higher than INFO happened
 - Autofill in username listbox if possible
 - Study editing:
-    - Remove extra contact emails
-    - Listbox of remembered logins per study, so they can be deleted
-    - Check study name is just letters and numbers
+    - Show listbox of remembered logins per study, so they can be deleted
 - YAML should remove unicode garbage pile if possible
 - Use ls-like file display with columns for name, size, date
 - At copying, move from "TODO" to "DONE
