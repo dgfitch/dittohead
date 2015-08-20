@@ -52,6 +52,7 @@ last_users = load_yaml("last_users.yaml", {})
 
 app = wx.App(0)
 copy_frame = CopyFrame(None, wx.ID_ANY, "", size=wx.Size(800,600))
+copy_frame.Maximize(True)
 copy_frame.LoadStudies(log, studies, last_users)
 app.SetTopWindow(copy_frame)
 copy_frame.Show()
