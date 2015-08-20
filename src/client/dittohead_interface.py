@@ -120,16 +120,18 @@ class StudyFrame(DittoheadFrame):
         self.callback = None
         self.original_name = None
 
-        LABEL_WIDTH = 300
+        LABEL_WIDTH = 200
         TEXTBOX_WIDTH = 300
 
         self.panel = wx.Panel(self, wx.ID_ANY)
         l1 = wx.StaticText(self.panel, -1, 'Study Name:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l3 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l4 = wx.StaticText(self.panel, -1, 'Remote Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l2 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l3 = wx.StaticText(self.panel, -1, 'Remote Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l4 = wx.StaticText(self.panel, -1, 'Clear Recent Users:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.local_directory = wx.DirPickerCtrl(self.panel, wx.ID_ANY, wx.EmptyString, u"Select a folder", wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE)
         self.text_remote_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
+        self.bClear = wx.Button(self.panel, wx.NewId(), 'Clear', (-1, -1), wx.DefaultSize)
  
         b1 = wx.Button(self.panel, wx.NewId(), '&OK', (-1, -1), wx.DefaultSize)
         b2 = wx.Button(self.panel, wx.NewId(), '&Cancel', (-1, -1), wx.DefaultSize)
@@ -139,6 +141,7 @@ class StudyFrame(DittoheadFrame):
 
         self.Bind(wx.EVT_BUTTON, self.OkClick, b1)
         self.Bind(wx.EVT_BUTTON, self.CancelClick, b2)
+        self.Bind(wx.EVT_BUTTON, self.ClearClick, self.bClear)
 
         b = 2
         w = LABEL_WIDTH
@@ -147,23 +150,30 @@ class StudyFrame(DittoheadFrame):
         hsizer1.Add(self.text_name, 1, wx.GROW, b)
         hsizer1.SetItemMinSize(l1, (w, -1))
 
+        hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer2.Add(l2, 0, wx.RIGHT, b)
+        hsizer2.Add(self.local_directory, 1, wx.GROW, b)
+        hsizer2.SetItemMinSize(l2, (w, -1))
+
         hsizer3 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer3.Add(l3, 0, wx.RIGHT, b)
-        hsizer3.Add(self.local_directory, 1, wx.GROW, b)
+        hsizer3.Add(self.text_remote_directory, 1, wx.GROW, b)
         hsizer3.SetItemMinSize(l3, (w, -1))
 
         hsizer4 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer4.Add(l4, 0, wx.RIGHT, b)
-        hsizer4.Add(self.text_remote_directory, 1, wx.GROW, b)
+        hsizer4.Add(self.bClear, 1, wx.GROW, b)
         hsizer4.SetItemMinSize(l4, (w, -1))
+
 
         hsizerLast = wx.BoxSizer(wx.HORIZONTAL)
         hsizerLast.Add(b1, 0)
         hsizerLast.Add(b2, 0, wx.LEFT, 10)
 
-        b = 5
+        b = 6
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1, 0, wx.EXPAND | wx.ALL, b)
+        vsizer1.Add(hsizer2, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer3, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer4, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(staline, 0, wx.GROW | wx.ALL, b)
@@ -178,9 +188,10 @@ class StudyFrame(DittoheadFrame):
         self.text_remote_directory.SetValue("/home/inbox/dittohead")
 
 
-    def EditStudy(self, studies, name):
+    def EditStudy(self, studies, last_users, name):
         self.isNew = False
         self.studies = studies
+        self.last_users = last_users
         self.original_name = name
         for s in self.studies:
             if s["name"] == name:
@@ -230,6 +241,9 @@ class StudyFrame(DittoheadFrame):
 
     def CancelClick(self, event):
         self.Destroy()
+
+    def ClearClick(self, event):
+        self.last_users[self.original_name] = []
 
 
 class CopyFrame(DittoheadFrame):
@@ -442,7 +456,7 @@ class CopyFrame(DittoheadFrame):
 
     def EditStudyClick(self, event):
         study_frame = StudyFrame(self, wx.ID_ANY, "Edit Study")
-        study_frame.EditStudy(self.studies, self.list_studies.GetStringSelection())
+        study_frame.EditStudy(self.studies, self.last_users, self.list_studies.GetStringSelection())
         study_frame.callback = self.ShowStudies
         study_frame.Show()
 

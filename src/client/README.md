@@ -13,11 +13,9 @@ Uses:
 
 - Only display "Errors occurred" message if something higher than INFO happened
 - Autofill in username listbox if possible
-- Study editing:
-    - Show listbox of remembered logins per study, so they can be deleted
 - YAML should remove unicode garbage pile if possible
 - Use ls-like file display with columns for name, size, date
-- At copying, move from "TODO" to "DONE
+- At copying, move from "TODO" to "DONE"
 - Make "appears to have" text less awkward
 - Last ran at => format date better
 - We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
