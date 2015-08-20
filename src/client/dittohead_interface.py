@@ -272,7 +272,15 @@ class CopyFrame(DittoheadFrame):
         self.copy_gauge = wx.Gauge(self.panel, wx.ID_ANY)
 
         self.label_preview = wx.StaticText(self.panel, wx.ID_ANY, "Preview:")
-        self.text_preview = wx.TextCtrl(self.panel, wx.ID_ANY, "", style=wx.TE_MULTILINE)
+        self.list_preview = wx.ListCtrl(self.panel, wx.ID_ANY, style=wx.LC_REPORT)
+        self.label_done = wx.StaticText(self.panel, wx.ID_ANY, "")
+        self.list_done = wx.ListCtrl(self.panel, wx.ID_ANY, style=wx.LC_REPORT)
+
+        list_controls = [self.list_preview, self.list_done]
+        for l in list_controls:
+            l.InsertColumn(0, "Name", format=wx.LIST_FORMAT_LEFT, width=450)
+            l.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT, width=100)
+            l.InsertColumn(2, "Date", format=wx.LIST_FORMAT_LEFT, width=200)
 
         self.__set_properties()
         self.__bind_events()
@@ -341,9 +349,11 @@ class CopyFrame(DittoheadFrame):
         right_pane.Add(self.combo_username, 0, wx.EXPAND)
         right_pane.Add(self.label_password, 0, wx.EXPAND)
         right_pane.Add(self.text_password, 0, wx.EXPAND)
-        right_pane.Add(self.label_preview, 0, wx.EXPAND)
 
-        right_pane.Add(self.text_preview, 1, wx.EXPAND | wx.ALL, 0)
+        right_pane.Add(self.label_preview, 0, wx.EXPAND)
+        right_pane.Add(self.list_preview, 1, wx.EXPAND | wx.ALL, 0)
+        right_pane.Add(self.label_done, 0, wx.EXPAND)
+        right_pane.Add(self.list_done, 1, wx.EXPAND | wx.ALL, 0)
 
         right_pane.Add(self.copy_status, 0, wx.EXPAND, 0)
         right_pane.Add(self.copy_gauge, 0, wx.EXPAND, 0)
@@ -423,10 +433,10 @@ class CopyFrame(DittoheadFrame):
         for s in self.studies:
             if s["name"] == self.selected_study:
                 if "last_time" in s:
-                    self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"]))
+                    self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"].strftime("%c")))
                     self.Layout()
                 else:
-                    self.label_preview.SetLabel("Preview: ({0} appears to have never ran on this machine yet)".format(self.selected_study))
+                    self.label_preview.SetLabel("Preview: ({0} has not ran on this machine yet)".format(self.selected_study))
 
                 users = self.combo_username
                 previous_user_value = users.GetValue()
@@ -462,26 +472,26 @@ class CopyFrame(DittoheadFrame):
 
 
     def UpdatePreview(self):
+        self.list_preview.DeleteAllItems()
         files = self.FilesToCopy()
         if len(files) == 0:
-            p = "No new data files found."
+            self.list_preview.InsertStringItem(0, "No new data files found.")
         else:
-            p = "New files found:\n\n"
             for f in files:
-                p += "Path: '{0}', {1}, modified at {2}\n => {3}\n\n".format(f['local_path'], f['size'], f['mtime'], f['remote_path'])
-
-        self.text_preview.SetValue(p)
+                pos = self.list_preview.InsertStringItem(0, f['local_path'])
+                self.list_preview.SetStringItem(pos, 1, f['size'])
+                self.list_preview.SetStringItem(pos, 2, f['mtime'].strftime("%c"))
 
     def FilesToCopy(self):
         if not self.selected_study: return []
 
         # Nicked from http://stackoverflow.com/questions/1094841/
-        def sizeof_fmt(num, suffix='B'):
-            for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        def sizeof_fmt(num, suffix='b'):
+            for unit in ['','K','M','G','T','P','E','Z']:
                 if abs(num) < 1024.0:
                     return "%3.1f%s%s" % (num, unit, suffix)
                 num /= 1024.0
-            return "%.1f%s%s" % (num, 'Yi', suffix)
+            return "%.1f%s%s" % (num, 'Y', suffix)
 
         self.last_refreshed_files = datetime.now()
 

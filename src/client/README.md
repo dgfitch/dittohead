@@ -11,13 +11,10 @@ Uses:
 
 ## TODO
 
-- Only display "Errors occurred" message if something higher than INFO happened
-- Autofill in username listbox if possible
-- YAML should remove unicode garbage pile if possible
-- Use ls-like file display with columns for name, size, date
+- Double check that "Errors occurred" message only displays if something higher than INFO happened
 - At copying, move from "TODO" to "DONE"
-- Make "appears to have" text less awkward
-- Last ran at => format date better
+- Autofill in username listbox if possible (seems non-trivial unfortunately)
+- YAML: should remove unicode garbage pile if possible
 - We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
 - We don't use the extra contact emails in study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
 
