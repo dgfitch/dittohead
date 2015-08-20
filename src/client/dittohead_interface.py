@@ -273,24 +273,22 @@ class CopyFrame(DittoheadFrame):
 
         self.label_preview = wx.StaticText(self.panel, wx.ID_ANY, "Preview:")
         self.list_preview = wx.ListCtrl(self.panel, wx.ID_ANY, style=wx.LC_REPORT)
-        self.label_done = wx.StaticText(self.panel, wx.ID_ANY, "")
         self.list_done = wx.ListCtrl(self.panel, wx.ID_ANY, style=wx.LC_REPORT)
 
         list_controls = [self.list_preview, self.list_done]
         for l in list_controls:
-            l.InsertColumn(0, "Name", format=wx.LIST_FORMAT_LEFT, width=450)
+            l.InsertColumn(0, "Path", format=wx.LIST_FORMAT_LEFT, width=450)
             l.InsertColumn(1, "Size", format=wx.LIST_FORMAT_RIGHT, width=100)
             l.InsertColumn(2, "Date", format=wx.LIST_FORMAT_LEFT, width=200)
+
+        l.InsertColumn(3, "Remote Path", format=wx.LIST_FORMAT_LEFT, width=450)
 
         self.__set_properties()
         self.__bind_events()
         self.__do_layout()
         # end wxGlade
 
-        # Some parts of the UI should be hidden before the copy.
-        # If I hide them, they don't get a reserved space in the layout.
-        # So this is unnecessarily ugly because I don't understand wxPython.
-        self.copy_status.SetLabel("")
+        self.copy_status.SetLabel("Upload status:")
 
         self.selected_study = None
         self.last_refreshed_files = None
@@ -352,10 +350,9 @@ class CopyFrame(DittoheadFrame):
 
         right_pane.Add(self.label_preview, 0, wx.EXPAND)
         right_pane.Add(self.list_preview, 1, wx.EXPAND | wx.ALL, 0)
-        right_pane.Add(self.label_done, 0, wx.EXPAND)
+        right_pane.Add(self.copy_status, 0, wx.EXPAND)
         right_pane.Add(self.list_done, 1, wx.EXPAND | wx.ALL, 0)
 
-        right_pane.Add(self.copy_status, 0, wx.EXPAND, 0)
         right_pane.Add(self.copy_gauge, 0, wx.EXPAND, 0)
         
         hgap, vgap = 0, 0
@@ -604,6 +601,21 @@ class CopyFrame(DittoheadFrame):
     def OnProgress(self, event):
         self.copy_gauge.SetValue(event.number)
         self.copy_status.SetLabel("Copying " + event.path)
+        # Move item matching event.path from list_preview to list_done
+        f = (item for item in self.files if item["local_path"] == event.path).next()
+        if f:
+            pos = self.list_done.InsertStringItem(0, f['local_path'])
+            self.list_done.SetStringItem(pos, 1, f['size'])
+            self.list_done.SetStringItem(pos, 2, f['mtime'].strftime("%c"))
+            self.list_done.SetStringItem(pos, 3, f['remote_path'])
+
+            # Remove from list_preview
+            pos = self.list_preview.FindItem(-1, event.path)
+            self.list_preview.DeleteItem(pos)
+
+
+
+
 
 
     def OnResult(self, event):

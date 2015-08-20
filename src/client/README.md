@@ -11,8 +11,6 @@ Uses:
 
 ## TODO
 
-- Double check that "Errors occurred" message only displays if something higher than INFO happened
-- At copying, move from "TODO" to "DONE"
 - Autofill in username listbox if possible (seems non-trivial unfortunately)
 - YAML: should remove unicode garbage pile if possible
 - We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
