@@ -96,12 +96,13 @@ rsync_args = [
     "rsync",
     "-vbrtplz",
     "--chmod=Du+rwx,Dg+rwsx,Do+rx,Do-w,Fu+rw,Fu-x,Fg+rw,Fg-x,Fo+r,Fo-wx",
-    processing_location + "/*",
+    processing_location + "/",
     study_location + "/",
 ]
 
 log.info("Running rsync: {0}".format(rsync_args))
-subprocess.call(rsync_args)
+# NOTE: If this fails, the file will sit in processing_directory
+subprocess.check_call(rsync_args)
 
 
 log.info("Done processing location {0} to study location {1}, leaving in {2}".format(processing_location, study_location, done_location))
@@ -109,8 +110,5 @@ log.info("Done processing location {0} to study location {1}, leaving in {2}".fo
 
 # Success! We move it into done
 os.rename(processing_location, done_location)
-
-
-# TODO: Email a person?
 
 
