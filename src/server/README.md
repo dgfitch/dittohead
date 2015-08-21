@@ -48,7 +48,6 @@ Uses:
 
 ## TODO
 
-- Fix rsync path so it works right
 - Make logs go someplace less stupid
 - Make code less ugly
 
