@@ -8,16 +8,23 @@ Uses:
 - [py2app](https://pythonhosted.org/py2app/) for OSX packaging
 - [py2exe](http://www.py2exe.org/) for Windows packaging
 
+## About
 
-## TODO
+Currently, the client just stores configuration as YAML files in $PWD.
 
-- Autofill in username listbox if possible (seems non-trivial unfortunately)
-- YAML: should remove unicode garbage pile if possible
+- `studies.yaml`: List of studies. Could be the same everywhere or customized 
+  per machine. This file also stores the time a particular study was last ran.
+  
+- `last_users.yaml`: List of recent users per study. Just a quick shortcut to let 
+  people pick their name from a list, and autofill the last person when a 
+  study is selected.
+
+### Notes
+
 - We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
 - We don't use the extra contact emails in study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
 
-
-## Testing help
+### Testing help
 
 - If you want to set file mtime to "now" on windows, like touch in unix, do this in powershell: `ls | foreach { $_.LastWriteTime = date }`
 - On windows, if running via EXE, it dumps a `dittohead.exe.log` in its current directory if there are warnings or errors.
@@ -85,4 +92,10 @@ This gets real clumsy. Maybe there are better ways.
     ```
 
 9. Finally, now you can go into `$DITTOHEAD_ROOT/src/client` and run `wxpy dittohead.py`.
+
+
+## TODO
+
+- Autofill combobox for user name, if possible. (This seems non-trivial with current wxPython, unfortunately.)
+- YAML: we should remove the weird unicode garbage pile if possible.
 

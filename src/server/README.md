@@ -5,19 +5,21 @@ Uses:
 - [watchdog](http://pythonhosted.org/watchdog/)
 
 
-## Configure a virtualenv
+## Installation
+
+### Configure a virtualenv
 
 1. `python virtualenv.py dittohead_server`
 2. `source dittohead_server/bin/activate`
 
 
-## Configure server
+### Configure server
 
 1. `pip install watchdog`
 2. Edit config.yaml
 
 
-## Running
+### Run the daemon
 
 1. Run `dittohead_watcher.py`
 2. Wait for tasty files to arrive
@@ -36,6 +38,8 @@ Uses:
     2. Runs `rsync` to copy to the final location
     3. Moves the directory to `done`
    
+If you want to re-run something, move it from `done` to `inbox`.
+
 
 ### General upkeep
 
@@ -46,24 +50,10 @@ Uses:
 3. Clean out the "done" directory once in a while
 
 
-## TODO
-
-- Make logs go someplace less stupid
-- Make code less ugly
+## Notes
 
 
-## Watcher daemon
-
-1. Watch `inbox` directory for things that are complete (don't start with .)
-2. Fork a child
-3. Move it to `processing` directory
-4. Copy to the correct location (probably rsync), ensuring that no files are overwritten or changed
-5. Optional notification email
-
-
-## Permissions required
-
-### Watcher location
+### Watcher location and permissions
 
     /.../dittohead (dittohead:dittohead-grp, 755)
       /inbox (mode 3773)
@@ -75,27 +65,28 @@ Uses:
       /processing (mode 700)
       /done (mode 700)
 
-### Final location
-
-TODO: Still being determined
+### Final location and permissions
 
 Everything is the same as it was for raw-data, so it can be locked down separately. We create a new directory inside /study/foo, like so:
 
     /study
       /foo (foo:foo-grp 3775)
         /raw-data (mri:foo-raw-data 3750)
-        /raw-dittohead (dittohead:foo-grp 3750)
-          /eprime
-          /biopac
+        /raw-dittohead (dittohead:foo-grp 3750) [this name is still TBD]
+          files
           .
           .
           .
 
 
-## Notification
+### Notification
 
 We may want to make the watcher notify someone about failed or even successful jobs in the future.
 
 We may also want to include "Hey, your study is out of space!" or "Your study is 90% full" notifications with that.
 
+### TODO
+
+- Make logs go someplace less stupid
+- Make code less ugly
 
