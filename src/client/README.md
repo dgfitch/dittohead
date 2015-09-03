@@ -14,33 +14,37 @@ Currently, the client just stores configuration as YAML files in $PWD.
 
 - `presets.yaml`: List of presets.
   
-  Each preset has a name, the study it is for, and the "kind" of file which is 
-  the subdirectory underneath raw-data where the files end up -- for example, 
-  "eprime" or "biopac".
+  Each preset has the following data:
+  
+  - Preset name
+  - Study abbreviation for the study it uploads to
+  - The subdirectory underneath raw-data where the files end up -- for example, "eprime" or "biopac". If the 
+    subdirectory is blank, no subdirectory will be used.
+  - Local directory: the place on the local machine to upload new files from
+  - Remote directory: the path to the dittohead inbox on the server
 
   This file could be the same everywhere or customized per machine.
   This file also stores the time a particular preset was last ran.
   (Put here because it's easier than maintaining linkages to a separate list 
   when the preset's name could change...)
   
-- `last_users.yaml`: List of recent users per study.
+- `last_users.yaml`: List of recent users per preset.
 
   Just a quick shortcut to let people pick their name from a list, and 
-  autofill the last person when a study is selected.
+  autofill the last person when a preset is selected.
 
 ### Notes
 
-- We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `studies.yaml` if you care hard enough about this. 
-- We don't use the extra contact emails in study metadata. Currently, nobody will get notified about anything and they should just look in their study directory to confirm that *stuff happened*...
+- We don't currently care that "new" files with old timestamps will get ignored in the current scheme. Clear out the `last_time` value in `presets.yaml` if you care hard enough about this. 
 
 ### Testing help
 
 - If you want to set file mtime to "now" on windows, like touch in unix, do this in powershell: `ls | foreach { $_.LastWriteTime = date }`
 - On windows, if running via EXE, it dumps a `dittohead.exe.log` in its current directory if there are warnings or errors.
-- The client loads and saves studies from `studies.yaml` in the current directory, and 
+- The client loads and saves presets from `presets.yaml` in the current directory, and 
   will try to create it if it doesn't exist.
-- The client loads and saves the last user for each study in `last_users.yaml` 
-  -- less important than `studies.yaml`, and hopefully kind of helpful per-machine 
+- The client loads and saves the last user for each preset in `last_users.yaml` 
+  -- less important than `presets.yaml`, and hopefully kind of helpful per-machine 
   for people who have been uploading frequently.
 
 

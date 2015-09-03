@@ -40,7 +40,7 @@ def copy_files(thread, user, password, files, preset, remotehost="guero"):
     """
     log = logging.getLogger('dittohead.copy')
 
-    log.info("Starting copy of %s files for %s to %s in preset %s", len(files), user, remotehost, preset['name'])
+    log.info("Starting copy of %s files for %s to %s in preset %s for study %s with subdirectory %s", len(files), user, remotehost, preset['name'], preset['study'], preset['subdirectory'])
 
     try:
         ssh = paramiko.SSHClient()
@@ -58,17 +58,25 @@ def copy_files(thread, user, password, files, preset, remotehost="guero"):
 
         index = 1
         for f in files:
-            log.debug("Operating on file {0}".format(f))
             remote_path = f['remote_path']
             local_path  = f['local_path']
-            full_remote_path = posixpath.join(upload_folder_path, remote_path)
+
+            if preset['subdirectory']:
+                full_remote_path = posixpath.join(upload_folder_path, preset['subdirectory'], remote_path)
+            else:
+                full_remote_path = posixpath.join(upload_folder_path, remote_path)
 
             # make directory for remote path if necessary
             full_remote_folder = posixpath.dirname(full_remote_path)
             mkdir(ftp, full_remote_folder, ignore_existing=True)
 
             thread.progress(index, local_path)
-            destination_path = upload_folder_path + "/" + remote_path
+            if preset['subdirectory']:
+                destination_path = upload_folder_path + "/" + preset['subdirectory'] + "/" + remote_path
+            else:
+                destination_path = upload_folder_path + "/" + remote_path
+
+            log.debug("Operating on file {0} using path {1}".format(f, full_remote_path))
 
             # TODO: This supports a callback that sends bytes/total bytes, surface to UI as well someday?
             ftp.put(local_path, destination_path)
