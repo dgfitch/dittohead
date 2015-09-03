@@ -60,6 +60,7 @@ dittohead.log
 last_users.yaml
 last_times.yaml
 studies.yaml
+presets.yaml
 
 # Client packaging directories
 win_build/

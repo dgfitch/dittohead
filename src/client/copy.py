@@ -25,7 +25,7 @@ def mkdir(ftp, path, mode=511, ignore_existing=False):
             raise
 
 
-def copy_files(thread, user, password, files, study, remotehost="guero"):
+def copy_files(thread, user, password, files, preset, remotehost="guero"):
     """
     User and password are unencrypted in memory.
     Probably not great.
@@ -35,12 +35,12 @@ def copy_files(thread, user, password, files, study, remotehost="guero"):
         - remote_path   (relative)
         - mtime         (in case we want to force mtimes to match?)
 
-    `study` is the hash with name, remote_directory, extra_contacts, and so on
+    `preset` is the hash with name, remote_directory, extra_contacts, and so on
 
     """
     log = logging.getLogger('dittohead.copy')
 
-    log.info("Starting copy of %s files for %s to %s in study %s", len(files), user, remotehost, study['name'])
+    log.info("Starting copy of %s files for %s to %s in preset %s", len(files), user, remotehost, preset['name'])
 
     try:
         ssh = paramiko.SSHClient()
@@ -48,10 +48,10 @@ def copy_files(thread, user, password, files, study, remotehost="guero"):
         ssh.connect(remotehost, username=user, password=password)
 
         ftp = ssh.open_sftp()
-        final_folder_name = "{0}-{1}".format(study['name'], str(datetime.datetime.now()).replace(" ", "_"))
-        final_folder_path = "{0}/{1}".format(study['remote_directory'], final_folder_name)
+        final_folder_name = "{0}-{1}".format(preset['study'], str(datetime.datetime.now()).replace(" ", "_"))
+        final_folder_path = "{0}/{1}".format(preset['remote_directory'], final_folder_name)
         upload_folder_name = "." + final_folder_name
-        upload_folder_path = "{0}/{1}".format(study['remote_directory'], upload_folder_name)
+        upload_folder_path = "{0}/{1}".format(preset['remote_directory'], upload_folder_name)
 
         log.debug("Creating folder " + upload_folder_path)
         mkdir(ftp, upload_folder_path)
@@ -90,7 +90,7 @@ def copy_files(thread, user, password, files, study, remotehost="guero"):
 
         ssh.close()
 
-        log.info("Completed copy of %s files for %s to %s in study %s", len(files), user, remotehost, study['name'])
+        log.info("Completed copy of %s files for %s to %s in preset %s", len(files), user, remotehost, preset['name'])
         
     except paramiko.ssh_exception.AuthenticationException:
         log.info("Authentication exception by %s", user)

@@ -44,22 +44,22 @@ def save_yaml(x, filename):
 log = configure_logging()
 
 
-studies = load_yaml("studies.yaml", [])
-if len(studies) < 1:
-    log.warn("No studies found in YAML settings file.")
+presets = load_yaml("presets.yaml", [])
+if len(presets) < 1:
+    log.warn("No upload presets found in YAML settings file.")
 
 last_users = load_yaml("last_users.yaml", {})
 
 app = wx.App(0)
 copy_frame = CopyFrame(None, wx.ID_ANY, "", size=wx.Size(800,600))
 copy_frame.Maximize(True)
-copy_frame.LoadStudies(log, studies, last_users)
+copy_frame.LoadPresets(log, presets, last_users)
 app.SetTopWindow(copy_frame)
 copy_frame.Show()
 
 app.MainLoop()
 
 save_yaml(last_users, "last_users.yaml")
-save_yaml(studies, "studies.yaml")
+save_yaml(presets, "presets.yaml")
 
 

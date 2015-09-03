@@ -12,12 +12,21 @@ Uses:
 
 Currently, the client just stores configuration as YAML files in $PWD.
 
-- `studies.yaml`: List of studies. Could be the same everywhere or customized 
-  per machine. This file also stores the time a particular study was last ran.
+- `presets.yaml`: List of presets.
   
-- `last_users.yaml`: List of recent users per study. Just a quick shortcut to let 
-  people pick their name from a list, and autofill the last person when a 
-  study is selected.
+  Each preset has a name, the study it is for, and the "kind" of file which is 
+  the subdirectory underneath raw-data where the files end up -- for example, 
+  "eprime" or "biopac".
+
+  This file could be the same everywhere or customized per machine.
+  This file also stores the time a particular preset was last ran.
+  (Put here because it's easier than maintaining linkages to a separate list 
+  when the preset's name could change...)
+  
+- `last_users.yaml`: List of recent users per study.
+
+  Just a quick shortcut to let people pick their name from a list, and 
+  autofill the last person when a study is selected.
 
 ### Notes
 

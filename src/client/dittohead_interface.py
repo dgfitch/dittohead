@@ -12,7 +12,7 @@ from copy import copy_files, AuthenticationException
 
 # Default increased font size for things
 FONT_SIZE = (8,20)
-# A regex that study names must match
+# A regex that preset names must match
 SANE_NAME_PATTERN = re.compile("^[\w\d]+$")
 
 
@@ -69,7 +69,7 @@ class WorkerThread(Thread):
                 user=self.username,
                 password=self.password, 
                 files=self.files,
-                study=self.study,
+                preset=self.preset,
             )
 
             if self._want_abort:
@@ -110,7 +110,7 @@ class DittoheadFrame(wx.Frame):
             self.SetIcon(icon)
 
 
-class StudyFrame(DittoheadFrame):
+class PresetFrame(DittoheadFrame):
     """
     The frame for editing study file locations and metadata.
     """
@@ -124,11 +124,16 @@ class StudyFrame(DittoheadFrame):
         TEXTBOX_WIDTH = 300
 
         self.panel = wx.Panel(self, wx.ID_ANY)
-        l1 = wx.StaticText(self.panel, -1, 'Study Name:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l2 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l3 = wx.StaticText(self.panel, -1, 'Remote Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l4 = wx.StaticText(self.panel, -1, 'Clear Recent Users:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l1 = wx.StaticText(self.panel, -1, 'Preset Name:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l2 = wx.StaticText(self.panel, -1, 'Study Abbreviation:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l3 = wx.StaticText(self.panel, -1, 'Subdir in raw-data:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l4 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l5 = wx.StaticText(self.panel, -1, 'Remote Inbox Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l6 = wx.StaticText(self.panel, -1, 'Clear Recent Users:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
+        self.text_study_abbreviation = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
+        self.text_data_subdirectory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.local_directory = wx.DirPickerCtrl(self.panel, wx.ID_ANY, wx.EmptyString, u"Select a folder", wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE)
         self.text_remote_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.bClear = wx.Button(self.panel, wx.NewId(), 'Clear', (-1, -1), wx.DefaultSize)
@@ -145,6 +150,7 @@ class StudyFrame(DittoheadFrame):
 
         b = 2
         w = LABEL_WIDTH
+
         hsizer1 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer1.Add(l1, 0, wx.RIGHT, b)
         hsizer1.Add(self.text_name, 1, wx.GROW, b)
@@ -152,54 +158,70 @@ class StudyFrame(DittoheadFrame):
 
         hsizer2 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer2.Add(l2, 0, wx.RIGHT, b)
-        hsizer2.Add(self.local_directory, 1, wx.GROW, b)
+        hsizer2.Add(self.text_study_abbreviation, 1, wx.GROW, b)
         hsizer2.SetItemMinSize(l2, (w, -1))
 
         hsizer3 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer3.Add(l3, 0, wx.RIGHT, b)
-        hsizer3.Add(self.text_remote_directory, 1, wx.GROW, b)
+        hsizer3.Add(self.text_data_subdirectory, 1, wx.GROW, b)
         hsizer3.SetItemMinSize(l3, (w, -1))
 
         hsizer4 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer4.Add(l4, 0, wx.RIGHT, b)
-        hsizer4.Add(self.bClear, 1, wx.GROW, b)
+        hsizer4.Add(self.local_directory, 1, wx.GROW, b)
         hsizer4.SetItemMinSize(l4, (w, -1))
+
+        hsizer5 = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer5.Add(l5, 0, wx.RIGHT, b)
+        hsizer5.Add(self.text_remote_directory, 1, wx.GROW, b)
+        hsizer5.SetItemMinSize(l5, (w, -1))
+
+        hsizer6 = wx.BoxSizer(wx.HORIZONTAL)
+        hsizer6.Add(l6, 0, wx.RIGHT, b)
+        hsizer6.Add(self.bClear, 1, wx.GROW, b)
+        hsizer6.SetItemMinSize(l6, (w, -1))
 
 
         hsizerLast = wx.BoxSizer(wx.HORIZONTAL)
         hsizerLast.Add(b1, 0)
         hsizerLast.Add(b2, 0, wx.LEFT, 10)
 
-        b = 6
+        b = 8
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer2, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer3, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer4, 0, wx.EXPAND | wx.ALL, b)
+        vsizer1.Add(hsizer5, 0, wx.EXPAND | wx.ALL, b)
+        vsizer1.Add(hsizer6, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(staline, 0, wx.GROW | wx.ALL, b)
         vsizer1.Add(hsizerLast, 0, wx.ALIGN_RIGHT | wx.ALL, b)
 
         self.panel.SetSizerAndFit(vsizer1)
         self.SetClientSize(vsizer1.GetSize())
 
-    def AddStudy(self, studies):
+    def AddPreset(self, presets):
         self.isNew = True
-        self.studies = studies
+        self.presets = presets
         self.text_remote_directory.SetValue("/home/inbox/dittohead")
+        self.text_data_subdirectory.SetValue("eprime")
+        self.bClear.Enable(False)
 
 
-    def EditStudy(self, studies, last_users, name):
+    def EditPreset(self, presets, last_users, name):
         self.isNew = False
-        self.studies = studies
+        self.presets = presets
         self.last_users = last_users
         self.original_name = name
-        for s in self.studies:
+        for s in self.presets:
             if s["name"] == name:
                 break
         else:
-            raise Exception("Trying to edit a nonexistent study {0} in hash {1}".format(name, studies))
+            raise Exception("Trying to edit a nonexistent preset {0} in hash {1}".format(name, presets))
         
         self.text_name.SetValue(s["name"])
+        if "study" in s: self.text_study_abbreviation.SetValue(s["study"])
+        if "subdirectory" in s: self.text_data_subdirectory.SetValue(s["subdirectory"])
         if "local_directory" in s: self.local_directory.SetPath(s["local_directory"])
         if "remote_directory" in s: self.text_remote_directory.SetValue(s["remote_directory"])
         
@@ -208,30 +230,32 @@ class StudyFrame(DittoheadFrame):
         new_name = self.text_name.GetValue()
 
         if new_name == "":
-            raise Exception("Trying to save changes to a nonexistent or blank study {0} in hash {1}".format(self.original_name, self.studies))
+            raise Exception("Trying to save changes to a nonexistent or blank preset {0} in hash {1}".format(self.original_name, self.presets))
 
-        if not SANE_NAME_PATTERN.match(new_name):
-            dlg = wx.MessageDialog(self, "Your study name must be all alphanumeric characters.", "Study name issue", wx.OK | wx.ICON_INFORMATION)
+        if not SANE_NAME_PATTERN.match(self.text_study_abbreviation.GetValue()):
+            dlg = wx.MessageDialog(self, "Your study name must be composed of alphanumeric characters.", "Study name issue", wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
             dlg.Destroy()
             return
 
         if self.isNew:
             s = {}
-            self.studies.append(s)
+            self.presets.append(s)
         else:
             if new_name != self.original_name:
-                for s in self.studies:
+                for s in self.presets:
                     if s["name"] == new_name:
-                        raise Exception("Tried to rename study originally named {0} as {1} when a study with that name already existed.".format(self.original_name, new_name))
+                        raise Exception("Tried to rename preset originally named {0} as {1} when a preset with that name already existed.".format(self.original_name, new_name))
 
-            for s in self.studies:
+            for s in self.presets:
                 if s["name"] == self.original_name:
                     break
             else:
-                raise Exception("Trying to save changes to a nonexistent study {0} in hash {1}".format(self.original_name, studies))
+                raise Exception("Trying to save changes to a nonexistent preset {0} in hash {1}".format(self.original_name, presets))
 
         s["name"] = new_name
+        s["study"] = self.text_study_abbreviation.GetValue()
+        s["subdirectory"] = self.text_data_subdirectory.GetValue()
         s["local_directory"] = self.local_directory.GetPath()
         s["remote_directory"] = self.text_remote_directory.GetValue()
 
@@ -255,8 +279,8 @@ class CopyFrame(DittoheadFrame):
 
         self.panel = wx.Panel(self, wx.ID_ANY)
 
-        self.label_studies = wx.StaticText(self.panel, wx.ID_ANY, "Choose a study:")
-        self.list_studies = wx.ListBox(self.panel, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
+        self.label_presets = wx.StaticText(self.panel, wx.ID_ANY, "Choose a preset:")
+        self.list_presets = wx.ListBox(self.panel, wx.ID_ANY, choices=[], style=wx.LB_ALWAYS_SB)
 
         self.label_username = wx.StaticText(self.panel, wx.ID_ANY, "Username")
         self.label_password = wx.StaticText(self.panel, wx.ID_ANY, "Password")
@@ -265,8 +289,8 @@ class CopyFrame(DittoheadFrame):
 
         self.copy_button = wx.Button(self.panel, wx.ID_ANY, "Copy")
 
-        self.edit_study_button = wx.Button(self.panel, wx.ID_ANY, "Edit Study")
-        self.add_study_button = wx.Button(self.panel, wx.ID_ANY, "Add Study")
+        self.edit_preset_button = wx.Button(self.panel, wx.ID_ANY, "Edit Preset")
+        self.add_preset_button = wx.Button(self.panel, wx.ID_ANY, "Add Preset")
 
         self.copy_status = wx.StaticText(self.panel, wx.ID_ANY, "Copying:")
         self.copy_gauge = wx.Gauge(self.panel, wx.ID_ANY)
@@ -290,7 +314,7 @@ class CopyFrame(DittoheadFrame):
 
         self.copy_status.SetLabel("Upload status:")
 
-        self.selected_study = None
+        self.selected_preset = None
         self.last_refreshed_files = None
         self.files = []
 
@@ -309,7 +333,7 @@ class CopyFrame(DittoheadFrame):
     def __set_properties(self):
         # begin wxGlade: CopyFrame.__set_properties
         self.SetTitle("dittohead - The Magic Secure File Copier!")
-        self.edit_study_button.Enable(False)
+        self.edit_preset_button.Enable(False)
         self.copy_button.Enable(False)
         self.copy_button.SetDefault()
 
@@ -318,10 +342,10 @@ class CopyFrame(DittoheadFrame):
     def __bind_events(self):
         self.Bind(wx.EVT_BUTTON, self.CopyClick, self.copy_button)
 
-        self.Bind(wx.EVT_BUTTON, self.EditStudyClick, self.edit_study_button)
-        self.Bind(wx.EVT_BUTTON, self.AddStudyClick, self.add_study_button)
+        self.Bind(wx.EVT_BUTTON, self.EditPresetClick, self.edit_preset_button)
+        self.Bind(wx.EVT_BUTTON, self.AddPresetClick, self.add_preset_button)
 
-        self.Bind(wx.EVT_LISTBOX, self.StudyClick, self.list_studies)
+        self.Bind(wx.EVT_LISTBOX, self.PresetClick, self.list_presets)
         self.Bind(wx.EVT_TEXT, self.UserChanged, self.combo_username)
         self.Bind(wx.EVT_COMBOBOX, self.UserChanged, self.combo_username)
         self.Bind(wx.EVT_TEXT, self.PasswordChanged, self.text_password)
@@ -332,14 +356,14 @@ class CopyFrame(DittoheadFrame):
         action_buttons.Add((-1, -1), 1)
         action_buttons.Add(self.copy_button, 0, wx.ALL, 0)
 
-        study_buttons = wx.BoxSizer(wx.HORIZONTAL)
-        study_buttons.Add(self.edit_study_button, 0, wx.ALL, 0)
-        study_buttons.Add((-1, -1), 1)
-        study_buttons.Add(self.add_study_button, 0, wx.ALL, 0)
+        preset_buttons = wx.BoxSizer(wx.HORIZONTAL)
+        preset_buttons.Add(self.edit_preset_button, 0, wx.ALL, 0)
+        preset_buttons.Add((-1, -1), 1)
+        preset_buttons.Add(self.add_preset_button, 0, wx.ALL, 0)
 
         left_pane = wx.BoxSizer(wx.VERTICAL)
-        left_pane.Add(self.label_studies, 0, wx.EXPAND, 0)
-        left_pane.Add(self.list_studies, 1, wx.EXPAND | wx.ALL, 0)
+        left_pane.Add(self.label_presets, 0, wx.EXPAND, 0)
+        left_pane.Add(self.list_presets, 1, wx.EXPAND | wx.ALL, 0)
 
         right_pane = wx.BoxSizer(wx.VERTICAL)
 
@@ -362,7 +386,7 @@ class CopyFrame(DittoheadFrame):
         b = 2
         fgs.AddMany([(left_pane, 1, wx.EXPAND | wx.ALL, b),
                      (right_pane, 1, wx.EXPAND | wx.ALL, b),
-                     (study_buttons, 1, wx.EXPAND | wx.ALL, b),
+                     (preset_buttons, 1, wx.EXPAND | wx.ALL, b),
                      (action_buttons, 1, wx.EXPAND | wx.ALL, b),
                     ])
 
@@ -389,29 +413,29 @@ class CopyFrame(DittoheadFrame):
         sys.excepthook = handler
 
 
-    def LoadStudies(self, log, studies, last_users):
+    def LoadPresets(self, log, presets, last_users):
         self.log = log
         self.__setup_exception_handling()
 
-        self.studies = studies
+        self.presets = presets
         self.last_users = last_users
-        self.ShowStudies()
+        self.ShowPresets()
 
 
-    def ShowStudies(self):
-        self.list_studies.Clear()
-        for s in self.studies:
-            self.list_studies.Append(s["name"])
+    def ShowPresets(self):
+        self.list_presets.Clear()
+        for s in self.presets:
+            self.list_presets.Append(s["name"])
 
     
-    def EnableEditStudy(self):
-        if self.selected_study:
-            self.edit_study_button.Enable(True)
+    def EnableEditPreset(self):
+        if self.selected_preset:
+            self.edit_preset_button.Enable(True)
         else:
-            self.edit_study_button.Enable(False)
+            self.edit_preset_button.Enable(False)
 
     def EnableCopy(self):
-        value = self.selected_study != None and self.combo_username.GetValue() != "" and self.text_password.GetValue() != ""
+        value = self.selected_preset != None and self.combo_username.GetValue() != "" and self.text_password.GetValue() != ""
         self.copy_button.Enable(value)
 
     def UserChanged(self, event):
@@ -420,27 +444,29 @@ class CopyFrame(DittoheadFrame):
     def PasswordChanged(self, event):
         self.EnableCopy()
 
-    def StudyClick(self, event):
-        selection = self.list_studies.GetStringSelection()
-        if selection == self.selected_study:
+    def PresetClick(self, event):
+        selection = self.list_presets.GetStringSelection()
+        if selection == self.selected_preset:
             return
 
-        self.selected_study = self.list_studies.GetStringSelection()
+        self.selected_preset = self.list_presets.GetStringSelection()
 
-        for s in self.studies:
-            if s["name"] == self.selected_study:
+        for s in self.presets:
+            if s["name"] == self.selected_preset:
+                self.copy_status.SetLabel("Files will go to: /study/{0}/raw-data/{1}".format(s["study"], s["subdirectory"]))
+
                 if "last_time" in s:
-                    self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_study, s["last_time"].strftime("%c")))
+                    self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_preset, s["last_time"].strftime("%c")))
                     self.Layout()
                 else:
-                    self.label_preview.SetLabel("Preview: ({0} has not ran on this machine yet)".format(self.selected_study))
+                    self.label_preview.SetLabel("Preview: ({0} has not ran on this machine yet)".format(self.selected_preset))
 
                 users = self.combo_username
                 previous_user_value = users.GetValue()
                 users.Clear()
 
-                if self.selected_study in self.last_users:
-                    for u in self.last_users[self.selected_study]:
+                if self.selected_preset in self.last_users:
+                    for u in self.last_users[self.selected_preset]:
                         users.Append(u)
 
                 if self.text_password.GetValue() == "" and users.GetCount() > 0:
@@ -451,21 +477,21 @@ class CopyFrame(DittoheadFrame):
                 self.UpdatePreview()
                 break
 
-        self.EnableEditStudy()
+        self.EnableEditPreset()
         self.EnableCopy()
 
 
-    def AddStudyClick(self, event):
-        study_frame = StudyFrame(self, wx.ID_ANY, "Add Study")
-        study_frame.AddStudy(self.studies)
-        study_frame.callback = self.ShowStudies
-        study_frame.Show()
+    def AddPresetClick(self, event):
+        preset_frame = PresetFrame(self, wx.ID_ANY, "Add Preset")
+        preset_frame.AddPreset(self.presets)
+        preset_frame.callback = self.ShowPresets
+        preset_frame.Show()
 
-    def EditStudyClick(self, event):
-        study_frame = StudyFrame(self, wx.ID_ANY, "Edit Study")
-        study_frame.EditStudy(self.studies, self.last_users, self.list_studies.GetStringSelection())
-        study_frame.callback = self.ShowStudies
-        study_frame.Show()
+    def EditPresetClick(self, event):
+        preset_frame = PresetFrame(self, wx.ID_ANY, "Edit Preset")
+        preset_frame.EditPreset(self.presets, self.last_users, self.list_presets.GetStringSelection())
+        preset_frame.callback = self.ShowPresets
+        preset_frame.Show()
 
 
     def UpdatePreview(self):
@@ -480,7 +506,7 @@ class CopyFrame(DittoheadFrame):
                 self.list_preview.SetStringItem(pos, 2, f['mtime'].strftime("%c"))
 
     def FilesToCopy(self):
-        if not self.selected_study: return []
+        if not self.selected_preset: return []
 
         # Nicked from http://stackoverflow.com/questions/1094841/
         def sizeof_fmt(num, suffix='b'):
@@ -492,8 +518,8 @@ class CopyFrame(DittoheadFrame):
 
         self.last_refreshed_files = datetime.now()
 
-        for s in self.studies:
-            if s["name"] == self.selected_study:
+        for s in self.presets:
+            if s["name"] == self.selected_preset:
                 if "last_time" in s:
                     last_time = s["last_time"]
                 else:
@@ -549,13 +575,13 @@ class CopyFrame(DittoheadFrame):
         self.GetTopWindow().Raise()
 
     def CopyClick(self, event):
-        study_name = self.list_studies.GetStringSelection()
+        preset_name = self.list_presets.GetStringSelection()
         username = self.combo_username.GetValue()
         password = self.text_password.GetValue()
 
 
-        if not study_name: 
-            self.showWarningDialog("You didn't select a study.")
+        if not preset_name: 
+            self.showWarningDialog("You didn't select a preset.")
             return
         if not username:
             self.showWarningDialog("You didn't enter a user name.")
@@ -564,25 +590,25 @@ class CopyFrame(DittoheadFrame):
             self.showWarningDialog("You didn't enter your password.")
             return
 
-        for s in self.studies:
-            if s["name"] == study_name:
-                study = s
+        for s in self.presets:
+            if s["name"] == preset_name:
+                preset = s
                 break
         else:
-            study = None
+            preset = None
 
-        if study == None:
-            self.showWarningDialog("Could not find information about study {0}".format(study_name))
+        if preset == None:
+            self.showWarningDialog("Could not find information about preset {0}".format(preset_name))
             return
 
-        if not study["remote_directory"]:
-            self.showWarningDialog("No remote directory set for study {0}".format(study_name))
+        if not preset["remote_directory"]:
+            self.showWarningDialog("No remote directory set for preset {0}".format(preset_name))
             return
 
 
         # We need to store this stuff for the result handler to use
-        self.study_name = study_name
-        self.study = study
+        self.preset_name = preset_name
+        self.preset = preset
         self.username = username
 
         self.PrepareUIForCopying(self.files)
@@ -594,7 +620,7 @@ class CopyFrame(DittoheadFrame):
         self.worker.files = self.files
         self.worker.username = self.username
         self.worker.password = password
-        self.worker.study = study
+        self.worker.preset = preset
         self.worker.start()
 
 
@@ -640,15 +666,15 @@ class CopyFrame(DittoheadFrame):
             self.copy_status.SetLabel("Copy complete!")
 
             # Reorder self.last_users or add a new entry if needed
-            if self.study_name not in self.last_users:
-                self.last_users[self.study_name] = []
+            if self.preset_name not in self.last_users:
+                self.last_users[self.preset_name] = []
 
-            last = self.last_users[self.study_name]
+            last = self.last_users[self.preset_name]
             if self.username in last:
                 last.remove(self.username)
             last.insert(0, self.username)
 
-            self.study["last_time"] = self.last_refreshed_files
+            self.preset["last_time"] = self.last_refreshed_files
 
             dlg = wx.MessageDialog(self, "{0} files were copied.".format(len(self.files)), "Copy successful", wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
