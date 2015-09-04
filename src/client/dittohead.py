@@ -38,28 +38,26 @@ def load_yaml(filename, default={}):
 
 def save_yaml(x, filename):
     with open(filename, 'w') as outfile:
-        outfile.write( yaml.dump(x, default_flow_style=False) )
+        outfile.write( yaml.dump(x, default_flow_style=False, encoding='utf-8', allow_unicode=True) )
 
 
 log = configure_logging()
 
+config = load_yaml("config.yaml", {"presets_path": "presets.yaml"})
 
-presets = load_yaml("presets.yaml", [])
-if len(presets) < 1:
-    log.warn("No upload presets found in YAML settings file.")
-
-last_users = load_yaml("last_users.yaml", {})
+presets = load_yaml(config["presets_path"], [])
+last_users = load_yaml(config["last_users_path"], {})
 
 app = wx.App(0)
 copy_frame = CopyFrame(None, wx.ID_ANY, "", size=wx.Size(800,600))
 copy_frame.Maximize(True)
-copy_frame.LoadPresets(log, presets, last_users)
+copy_frame.Init(config, log, presets, last_users)
 app.SetTopWindow(copy_frame)
 copy_frame.Show()
 
 app.MainLoop()
 
-save_yaml(last_users, "last_users.yaml")
-save_yaml(presets, "presets.yaml")
+save_yaml(last_users, config["presets_path"])
+save_yaml(presets, config["last_users_path"])
 
 

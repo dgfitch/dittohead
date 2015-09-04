@@ -12,6 +12,15 @@ Uses:
 
 Currently, the client just stores configuration as YAML files in $PWD.
 
+- `config.yaml`: .
+
+  - `host`: The server to connect to
+  - `input_directory`: The "inbox" directory that the watcher watches
+  - `study_dittohead_raw_folder_name`: Currently we put stuff inside 
+    "/study/STUDYNAME/raw-data". Change that here if you like.
+  - `presets.path`: Specify where `presets.yaml lives`
+  - `last_users.path`: Specify where `presets.yaml lives`
+
 - `presets.yaml`: List of presets.
   
   Each preset has the following data:

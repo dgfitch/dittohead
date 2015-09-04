@@ -51,6 +51,7 @@ class WorkerThread(Thread):
         Thread.__init__(self)
         self._handler = notify_window.GetEventHandler()
         self._want_abort = False
+        self.config = notify_window.config
 
     def run(self):
         """
@@ -70,6 +71,7 @@ class WorkerThread(Thread):
                 password=self.password, 
                 files=self.files,
                 preset=self.preset,
+                config=self.config,
             )
 
             if self._want_abort:
@@ -128,14 +130,12 @@ class PresetFrame(DittoheadFrame):
         l2 = wx.StaticText(self.panel, -1, 'Study Abbreviation:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l3 = wx.StaticText(self.panel, -1, 'Subdir in raw-data:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l4 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l5 = wx.StaticText(self.panel, -1, 'Remote Inbox Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l6 = wx.StaticText(self.panel, -1, 'Clear Recent Users:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
 
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.text_study_abbreviation = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.text_data_subdirectory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.local_directory = wx.DirPickerCtrl(self.panel, wx.ID_ANY, wx.EmptyString, u"Select a folder", wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE)
-        self.text_remote_directory = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.bClear = wx.Button(self.panel, wx.NewId(), 'Clear', (-1, -1), wx.DefaultSize)
  
         b1 = wx.Button(self.panel, wx.NewId(), '&OK', (-1, -1), wx.DefaultSize)
@@ -173,27 +173,21 @@ class PresetFrame(DittoheadFrame):
 
         hsizer5 = wx.BoxSizer(wx.HORIZONTAL)
         hsizer5.Add(l5, 0, wx.RIGHT, b)
-        hsizer5.Add(self.text_remote_directory, 1, wx.GROW, b)
+        hsizer5.Add(self.bClear, 1, wx.GROW, b)
         hsizer5.SetItemMinSize(l5, (w, -1))
-
-        hsizer6 = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer6.Add(l6, 0, wx.RIGHT, b)
-        hsizer6.Add(self.bClear, 1, wx.GROW, b)
-        hsizer6.SetItemMinSize(l6, (w, -1))
 
 
         hsizerLast = wx.BoxSizer(wx.HORIZONTAL)
         hsizerLast.Add(b1, 0)
         hsizerLast.Add(b2, 0, wx.LEFT, 10)
 
-        b = 8
+        b = 7
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
         vsizer1.Add(hsizer1, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer2, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer3, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer4, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(hsizer5, 0, wx.EXPAND | wx.ALL, b)
-        vsizer1.Add(hsizer6, 0, wx.EXPAND | wx.ALL, b)
         vsizer1.Add(staline, 0, wx.GROW | wx.ALL, b)
         vsizer1.Add(hsizerLast, 0, wx.ALIGN_RIGHT | wx.ALL, b)
 
@@ -203,7 +197,6 @@ class PresetFrame(DittoheadFrame):
     def AddPreset(self, presets):
         self.isNew = True
         self.presets = presets
-        self.text_remote_directory.SetValue("/home/inbox/dittohead")
         self.text_data_subdirectory.SetValue("eprime")
         self.bClear.Enable(False)
 
@@ -413,13 +406,15 @@ class CopyFrame(DittoheadFrame):
         sys.excepthook = handler
 
 
-    def LoadPresets(self, log, presets, last_users):
+    def Init(self, config, log, presets, last_users):
+        self.config = config
         self.log = log
         self.__setup_exception_handling()
 
         self.presets = presets
         self.last_users = last_users
         self.ShowPresets()
+
 
 
     def ShowPresets(self):
@@ -453,7 +448,11 @@ class CopyFrame(DittoheadFrame):
 
         for s in self.presets:
             if s["name"] == self.selected_preset:
-                self.copy_status.SetLabel("Files will go to: /study/{0}/raw-data/{1}".format(s["study"], s["subdirectory"]))
+                self.copy_status.SetLabel("Files will go to: /study/{0}/{1}/{2}".format(
+                    s["study"],
+                    self.config["study_dittohead_raw_folder_name"],
+                    s["subdirectory"]
+                    ))
 
                 if "last_time" in s:
                     self.label_preview.SetLabel("Preview: ({0} last ran at {1})".format(self.selected_preset, s["last_time"].strftime("%c")))

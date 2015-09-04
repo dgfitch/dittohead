@@ -1,0 +1,5 @@
+host: "guero"
+input_directory: "/home/dittohead/inbox"
+study_dittohead_raw_folder_name: "raw-data"
+presets_path: "presets.yaml"
+last_users_path: "last_users.yaml"

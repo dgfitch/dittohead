@@ -25,7 +25,7 @@ def mkdir(ftp, path, mode=511, ignore_existing=False):
             raise
 
 
-def copy_files(thread, user, password, files, preset, remotehost="guero"):
+def copy_files(thread, user, password, files, preset, config):
     """
     User and password are unencrypted in memory.
     Probably not great.
@@ -35,23 +35,23 @@ def copy_files(thread, user, password, files, preset, remotehost="guero"):
         - remote_path   (relative)
         - mtime         (in case we want to force mtimes to match?)
 
-    `preset` is the hash with name, remote_directory, extra_contacts, and so on
+    `preset` is the hash with name, study abbreviation, and so on
 
     """
     log = logging.getLogger('dittohead.copy')
 
-    log.info("Starting copy of %s files for %s to %s in preset %s for study %s with subdirectory %s", len(files), user, remotehost, preset['name'], preset['study'], preset['subdirectory'])
+    log.info("Starting copy of %s files for %s to %s in preset %s for study %s with subdirectory %s", len(files), user, config["host"], preset['name'], preset['study'], preset['subdirectory'])
 
     try:
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(remotehost, username=user, password=password)
+        ssh.connect(config["host"], username=user, password=password)
 
         ftp = ssh.open_sftp()
         final_folder_name = "{0}-{1}".format(preset['study'], str(datetime.datetime.now()).replace(" ", "_"))
-        final_folder_path = "{0}/{1}".format(preset['remote_directory'], final_folder_name)
+        final_folder_path = "{0}/{1}".format(config['input_directory'], final_folder_name)
         upload_folder_name = "." + final_folder_name
-        upload_folder_path = "{0}/{1}".format(preset['remote_directory'], upload_folder_name)
+        upload_folder_path = "{0}/{1}".format(config['input_directory'], upload_folder_name)
 
         log.debug("Creating folder " + upload_folder_path)
         mkdir(ftp, upload_folder_path)
@@ -62,13 +62,25 @@ def copy_files(thread, user, password, files, preset, remotehost="guero"):
             local_path  = f['local_path']
 
             if preset['subdirectory']:
-                full_remote_path = posixpath.join(upload_folder_path, preset['subdirectory'], remote_path)
+                joined_path = posixpath.join(preset['subdirectory'], remote_path)
             else:
-                full_remote_path = posixpath.join(upload_folder_path, remote_path)
+                joined_path = remote_path
 
-            # make directory for remote path if necessary
-            full_remote_folder = posixpath.dirname(full_remote_path)
-            mkdir(ftp, full_remote_folder, ignore_existing=True)
+            full_remote_path = posixpath.join(upload_folder_path, joined_path)
+
+            # make directory for remote path if necessary - paramiko can't do mkdir -r or -p
+            paths = []
+            while joined_path.rfind("/") >= 0:
+                k = joined_path.rfind("/")
+                joined_path = joined_path[:k]
+                paths.append(joined_path)
+
+            paths.reverse()
+            for path in paths:
+                full_remote_folder = posixpath.join(upload_folder_path, path)
+                log.debug("Creating remote folder at {0}".format(full_remote_folder))
+                mkdir(ftp, full_remote_folder, ignore_existing=True)
+
 
             thread.progress(index, local_path)
             if preset['subdirectory']:
@@ -98,7 +110,7 @@ def copy_files(thread, user, password, files, preset, remotehost="guero"):
 
         ssh.close()
 
-        log.info("Completed copy of %s files for %s to %s in preset %s", len(files), user, remotehost, preset['name'])
+        log.info("Completed copy of %s files for %s to %s in preset %s", len(files), user, config['host'], preset['name'])
         
     except paramiko.ssh_exception.AuthenticationException:
         log.info("Authentication exception by %s", user)
