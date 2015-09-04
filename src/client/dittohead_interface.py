@@ -225,6 +225,12 @@ class PresetFrame(DittoheadFrame):
         if new_name == "":
             raise Exception("Trying to save changes to a nonexistent or blank preset {0} in hash {1}".format(self.original_name, self.presets))
 
+        if self.text_data_subdirectory.GetValue() == "":
+            dlg = wx.MessageDialog(self, "You must specify a subdirectory, like 'eprime' or 'biopac'.", "Missing subdirectory", wx.OK | wx.ICON_INFORMATION)
+            dlg.ShowModal()
+            dlg.Destroy()
+            return
+
         if not SANE_NAME_PATTERN.match(self.text_study_abbreviation.GetValue()):
             dlg = wx.MessageDialog(self, "Your study name must be composed of alphanumeric characters.", "Study name issue", wx.OK | wx.ICON_INFORMATION)
             dlg.ShowModal()
