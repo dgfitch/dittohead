@@ -69,7 +69,7 @@ study_name = folder_name.split("-")[0]
 # Check that study name is sane
 sane_name_pattern = re.compile("^[\w\d]+$")
 if not sane_name_pattern.match(study_name):
-    raise Exception("Insane study name prefix detected on input directory: {0}".format(input_directory))
+    raise Exception("Insane study name prefix detected on input directory: {0}".format(study_name))
 
 
 study_location = os.path.join(config["study_directory"], study_name, config["study_dittohead_raw_folder_name"])

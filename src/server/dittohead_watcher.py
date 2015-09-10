@@ -94,7 +94,7 @@ def main():
     # First, if there are any pending things in the directory already, operate on them!
     for f in os.listdir(input_dir):
         path = os.path.join(input_dir, f)
-        if os.path.isdir(path):
+        if os.path.isdir(path) and not os.path.basename(path).startswith("."):
             operate(path)
 
     # Now, watch the input directory using Watchdog
