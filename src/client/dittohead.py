@@ -57,7 +57,7 @@ copy_frame.Show()
 
 app.MainLoop()
 
-save_yaml(last_users, config["presets_path"])
-save_yaml(presets, config["last_users_path"])
+save_yaml(presets, config["presets_path"])
+save_yaml(last_users, config["last_users_path"])
 
 
