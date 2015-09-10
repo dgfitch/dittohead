@@ -130,7 +130,7 @@ class PresetFrame(DittoheadFrame):
         l2 = wx.StaticText(self.panel, -1, 'Study Abbreviation:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l3 = wx.StaticText(self.panel, -1, 'Subdir in raw-data:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
         l4 = wx.StaticText(self.panel, -1, 'Local Directory:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
-        l6 = wx.StaticText(self.panel, -1, 'Clear Recent Users:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
+        l5 = wx.StaticText(self.panel, -1, 'Clear Recent Users:', (-1, -1), (-1, -1), wx.ALIGN_RIGHT)
 
         self.text_name = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
         self.text_study_abbreviation = wx.TextCtrl(self.panel, -1, '', (-1, -1), (TEXTBOX_WIDTH, -1))
@@ -216,7 +216,6 @@ class PresetFrame(DittoheadFrame):
         if "study" in s: self.text_study_abbreviation.SetValue(s["study"])
         if "subdirectory" in s: self.text_data_subdirectory.SetValue(s["subdirectory"])
         if "local_directory" in s: self.local_directory.SetPath(s["local_directory"])
-        if "remote_directory" in s: self.text_remote_directory.SetValue(s["remote_directory"])
         
 
     def OkClick(self, event):
@@ -256,7 +255,6 @@ class PresetFrame(DittoheadFrame):
         s["study"] = self.text_study_abbreviation.GetValue()
         s["subdirectory"] = self.text_data_subdirectory.GetValue()
         s["local_directory"] = self.local_directory.GetPath()
-        s["remote_directory"] = self.text_remote_directory.GetValue()
 
         if self.callback: self.callback()
         
@@ -604,10 +602,6 @@ class CopyFrame(DittoheadFrame):
 
         if preset == None:
             self.showWarningDialog("Could not find information about preset {0}".format(preset_name))
-            return
-
-        if not preset["remote_directory"]:
-            self.showWarningDialog("No remote directory set for preset {0}".format(preset_name))
             return
 
 
