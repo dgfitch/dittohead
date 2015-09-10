@@ -43,11 +43,11 @@ If you want to re-run something, move it from `done` to `inbox`.
 
 ### General upkeep
 
-1. Check for stuff sitting in the inbox directory
+1. Check for stuff sitting in the inbox directory. This means the watcher process probably isn't running. Oh no!
 
-2. Check for stuff sitting in the processing directory. Things should only be here when they are being actively processed
+2. Check for stuff sitting for a long time in the processing directory. Things should only be here when they are being actively processed.
 
-3. Clean out the "done" directory once in a while
+3. Clean out the "done" directory once in a while (with cron)
 
 
 ## Notes
@@ -72,7 +72,6 @@ Everything is the same as it was for raw-data, so it can be locked down separate
     /study
       /foo (foo:foo-grp 3775)
         /raw-data (mri:foo-raw-data 3750)
-        /raw-dittohead (dittohead:foo-grp 3750) [this name is still TBD]
           files
           .
           .

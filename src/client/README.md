@@ -25,12 +25,11 @@ Currently, the client just stores configuration as YAML files in $PWD.
   
   Each preset has the following data:
   
-  - Preset name
-  - Study abbreviation for the study it uploads to
-  - The subdirectory underneath raw-data where the files end up -- for example, "eprime" or "biopac". If the 
+  - `name`: Preset name
+  - `study`: Study abbreviation for the study it uploads to
+  - `subdirectory`: The subdirectory underneath raw-data where the files end up -- for example, "eprime" or "biopac". If the 
     subdirectory is blank, no subdirectory will be used.
-  - Local directory: the place on the local machine to upload new files from
-  - Remote directory: the path to the dittohead inbox on the server
+  - `local_directory`: Local directory: the place on the local machine to upload new files from
 
   This file could be the same everywhere or customized per machine.
   This file also stores the time a particular preset was last ran.

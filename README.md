@@ -28,34 +28,37 @@ We do not plan to support simultaneous uploads from two machines to the same dir
 
 ## For data collectors
 
-### How to upload new files
+### How to upload new data files
 
 1. Launch dittohead.
-2. Select your study on the left. A preview of what files will be sent will display.
+2. Select your preset in the list on the left. A preview of what files will be sent will display.
 3. A list of recent users will be filled in and you can select yourself or 
    type in your account name. (This is your BI account.)
 4. Enter your password.
-5. Click copy.
+5. Click **Copy**.
 
 ### How to hook up a new study
 
 1. Launch dittohead.
-2. Click **Add Study**.
-3. Fill in the study name.
-4. Click Browse by the local directory and choose where the local data files 
+2. Click **Add Preset**.
+3. Fill in the preset name, so you and others can easily remember what this is.
+4. Fill in the study name. This is the abbreviation as you see it on the `study` drive.
+5. Fill in the subdirectory. This is the directory inside `raw-data` where 
+   your files will end up. For example, you may want to store them in `eprime` 
+   or `biopac`.
+6. Click **Browse** by the local directory and choose where the local data files 
    for this study are collected.
-5. Fill in the remote location. (Usually, /study/{NAME}/raw-data ?)
-6. Hit OK. You are now ready to upload data!
+7. Hit OK. You are now ready to upload data!
 
-### To change file locations for a study
+### To change file locations for a preset
 
 1. Launch dittohead.
-2. Select the study you want to edit
-2. Click **Edit Study**
+2. Select the preset you want to edit
+2. Click **Edit Preset**
 
 ### Advanced editing
 
-The metadata for studies is stored locally in `studies.yaml` and can be edited 
+The metadata for the presets is stored locally in `presets.yaml` and can be edited 
 directly there if needed.
 
 ## For study runners
