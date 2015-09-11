@@ -675,7 +675,17 @@ class CopyFrame(DittoheadFrame):
 
             self.preset["last_time"] = self.last_refreshed_files
 
-            dlg = wx.MessageDialog(self, "{0} files were copied.".format(len(self.files)), "Copy successful", wx.OK | wx.ICON_INFORMATION)
+            dlg = wx.MessageDialog(self, "{0} files were copied to {1} in {2}. They will be on the study drive in /study/{3}/{4}/{5} soon, and you should confirm their arrival.".format(
+                len(self.files),
+                self.config["host"],
+                self.config["input_directory"],
+                self.preset["study"],
+                self.config["study_dittohead_raw_folder_name"],
+                self.preset["subdirectory"],
+                ),
+                "Copy successful",
+                wx.OK | wx.ICON_INFORMATION)
+
             dlg.ShowModal()
             dlg.Destroy()
 
