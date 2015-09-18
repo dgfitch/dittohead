@@ -52,9 +52,9 @@ def configure_logging(log_directory):
 
 
 def operate(directory):
-    # TODO: Is this the right way to do multithreaded? I have no idea
+    path = os.path.dirname(os.path.abspath(__file__))
     subprocess.Popen(
-        ["python", "dittohead_worker.py", directory]
+        ["python", os.path.join(path, "dittohead_worker.py"), directory]
     )
 
 
